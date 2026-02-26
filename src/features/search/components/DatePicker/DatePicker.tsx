@@ -13,9 +13,10 @@ type Props = {
   value: Date | undefined;
   onChange: (date: Date | undefined) => void;
   fromDate?: Date | undefined;
+  placeholder: string;
 };
 
-export function DatePicker({ value, onChange, fromDate }: Props) {
+export function DatePicker({ value, onChange, fromDate, placeholder }: Props) {
   const [open, setOpen] = useState(false);
 
   const today = new Date();
@@ -25,7 +26,7 @@ export function DatePicker({ value, onChange, fromDate }: Props) {
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button type="button" className={styles.trigger}>
-          {value ? format(value, "d MMMM, EEE", { locale: ru }) : "Дата"}
+          {value ? format(value, "d MMMM, EEE", { locale: ru }) : placeholder}
         </button>
       </Popover.Trigger>
 
@@ -49,4 +50,3 @@ export function DatePicker({ value, onChange, fromDate }: Props) {
     </Popover.Root>
   );
 }
-
