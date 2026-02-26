@@ -11,6 +11,8 @@
   border: none;
   cursor: pointer;
 
+  color: rgb(113, 112, 112);
+
   font-size: 15px;
   font-weight: 400;
 }
