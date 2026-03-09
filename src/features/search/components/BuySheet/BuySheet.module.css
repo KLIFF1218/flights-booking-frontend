@@ -1,0 +1,109 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.content {
+  position: fixed;
+  bottom: 16px;
+
+  left: 16px;
+  right: 16px;
+  margin: 0 auto;
+
+  max-width: 480px;
+  width: auto;
+
+  background: #ffffff;
+  border-radius: 16px;
+
+  padding: 16px;
+  overflow: hidden;
+  background-clip: padding-box;
+  z-index: 1001;
+
+  box-shadow:
+    0 -4px 12px rgba(0, 0, 0, 0.12),
+    0 -16px 32px rgba(0, 0, 0, 0.08);
+}
+
+.content:focus-visible {
+  outline: none;
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+
+  background: #d1d5db;
+  margin: 0 auto 12px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.loading {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  padding: 8px 0 4px;
+}
+
+.route {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+.buyButton {
+  width: 100%;
+  padding: 14px 0;
+
+  border: none;
+  border-radius: 12px;
+
+  background-color: #2563eb;
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.buyButton:hover {
+  background-color: #1d4ed8;
+}
+
+.summaryCard {
+  border-radius: 12px;
+  background: #f9fafb;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.summaryRoute {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.summaryMeta {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.summaryPrice {
+  margin-top: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
