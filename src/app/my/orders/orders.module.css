@@ -1,0 +1,79 @@
+.page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  padding: 40px 32px;
+  margin-top: 44px;
+}
+
+.wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  gap: 48px;
+}
+
+.content {
+  flex: 1;
+}
+
+.title {
+  font-size: 40px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  color: #111827;
+}
+
+/* Tabs */
+
+
+.tabs {
+  display: flex;
+  background: #d1d5db;          /* чуть темнее фон как на макете */
+  border-radius: 20px;          /* больше скругление */
+  padding: 8px;                 /* больше внутренний отступ */
+  width: 680px;                 /* шире */
+  height: 64px;                 /* фиксированная высота */
+  margin-bottom: 80px;
+}
+
+.tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 20px;              /* крупнее текст */
+  font-weight: 600;
+  border-radius: 16px;          /* скругление активной кнопки */
+  cursor: pointer;
+  transition: 0.2s ease;
+  color: #181e2b;
+}
+
+.activeTab {
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Empty state */
+
+.empty {
+  text-align: center;
+  margin-top: 60px;
+  max-width: 520px;
+}
+
+.empty h2 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.empty p {
+  color: #6b7280;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.eyes {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
