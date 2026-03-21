@@ -25,7 +25,10 @@ export function DatePicker({ value, onChange, fromDate, placeholder }: Props) {
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
-        <button type="button" className={styles.trigger}>
+        <button
+          type="button"
+          className={`${styles.trigger} ${value ? styles.filled : ""}`}
+        >
           {value ? format(value, "d MMMM, EEE", { locale: ru }) : placeholder}
         </button>
       </Popover.Trigger>
