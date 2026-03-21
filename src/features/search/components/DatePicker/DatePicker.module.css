@@ -17,6 +17,11 @@
   font-weight: 400;
 }
 
+.filled {
+  color: #111;
+  font-weight: 500;
+}
+
 .popover {
   background: white;
   border-radius: 16px;
