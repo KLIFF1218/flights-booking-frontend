@@ -1,0 +1,161 @@
+.trigger {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  height: 42px;
+  padding: 0 14px;
+
+  border-radius: 14px;
+  border: 1px solid transparent;
+
+  font-size: 14px;
+  font-weight: 400;
+  color: #ffffff;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.trigger:hover {
+  background: #3372f0;
+  border-color: #ffffff;
+}
+
+.trigger:active {
+  transform: scale(0.96);
+}
+
+.userInfo {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+
+.userName {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.userEmail {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.content {
+  margin-top: 6px;
+  width: 280px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+
+  animation-duration: 250ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1111;
+  transform-origin: top center;
+}
+
+.iconWrap {
+  width: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content[data-state="open"] {
+  animation: slideDownAndFade 200ms ease forwards;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.menuItem {
+  all: unset;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  color: #1f2937;
+  padding: 8px 10px;
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.menuItem:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.loginButton {
+  all: unset;
+  width: 100%;
+  background: #2563eb;
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 12px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+}
+
+.loginButton:hover {
+  background: #1d4ed8;
+}
+
+.logoutButton {
+  all: unset;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #ef4444;
+  color: white;
+  font-weight: 600;
+  padding: 12px 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 12px;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 20px;
+}
+
+.logoutButton:hover {
+  background: #dc2626;
+}
+
+.logoutButton:active {
+  transform: scale(0.98);
+}
+
+.logoutButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.arrow {
+  fill: white;
+}
+
+@keyframes slideDownAndFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
