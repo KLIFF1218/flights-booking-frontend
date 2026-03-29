@@ -1,0 +1,490 @@
+.results {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 12px;
+}
+
+.empty {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  color: #6b7280;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.routeRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.airlineInfo {
+  flex: 0 0 auto;
+}
+
+.pathMeta {
+  font-size: 13px;
+  color: #8a94a4;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.transferDot {
+  position: absolute;
+  top: 22px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a94a4;
+  transform: translateX(-50%);
+}
+
+.resultsSection {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ticketCard {
+  position: relative;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+  border: none;
+  display: block;
+  width: 100%;
+  text-align: left;
+  outline: none;
+}
+
+.ticketCard:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.ticketCard:focus,
+.ticketCard:active {
+  outline: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  left: 16px;
+  transform: translateY(-50%);
+  background: #0c73fe;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badgeGreen {
+  background: #16a34a; /* зелёный для cheapest */
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.price {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0c131d;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btnIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(67, 83, 106, 0.08);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0c131d;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btnIcon:hover {
+  background: rgba(67, 83, 106, 0.15);
+}
+
+.baggage {
+  display: inline-flex;
+  background: rgba(67, 83, 106, 0.08);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #0c131d;
+}
+
+.flightRoute {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.airlineLogo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.routeGrid {
+  display: flex;
+  flex: 1;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.timeBlock {
+  flex: 0 0 auto;
+}
+
+.time {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0c131d;
+  line-height: 1.2;
+}
+
+.city {
+  font-size: 13px;
+  color: #8a94a4;
+  white-space: nowrap;
+}
+
+.date {
+  display: block;
+  font-size: 12px;
+  color: rgba(12, 19, 29, 0.4);
+}
+
+.pathContainer {
+  display: none;
+  flex: 1;
+  position: relative;
+  padding-top: 10px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pathInfo {
+  font-size: 13px;
+  color: #8a94a4;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.pathVisual {
+  background: #fff;
+  width: 100%;
+  height: 20px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.pathLine {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background: #e5e7eb;
+  z-index: 1;
+  opacity: 1;
+}
+
+.planeIcon {
+  position: absolute;
+  z-index: 2;
+  background: #fff;
+  padding: 0 2px;
+  color: rgba(12, 19, 29, 0.4);
+  display: flex;
+}
+
+.planeStart {
+  left: -5px;
+}
+.planeEnd {
+  right: -5px;
+}
+
+.transferPoint {
+  position: absolute;
+  left: 45%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 4px;
+  background: #afb1b4;
+  border-radius: 10px;
+  z-index: 3;
+  border: 1px solid #fff;
+}
+
+.airportLabel {
+  position: absolute;
+  top: 22px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8a94a4;
+}
+
+.mobileInfo {
+  font-size: 12px;
+  color: #8a94a4;
+  margin-top: 8px;
+}
+
+
+
+@media (min-width: 700px) {
+  .routeGrid {
+    justify-content: space-between;
+    gap: 0;
+  }
+  .pathContainer {
+    display: flex;
+  }
+  .timeBlock {
+    flex: 0 0 100px;
+  }
+  .timeBlockArrival {
+    text-align: right;
+  }
+  .mobileInfo {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .card {
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .pathVisual {
+    height: 12px;    
+  }
+
+  .pathLine {
+    width: 60%;   
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .price {
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .route {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .timeBlock {
+    text-align: center;
+  }
+
+  .time {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .airport {
+    font-size: 13px;
+    color: #6b7280;
+  }
+
+  .middle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .line {
+    width: 60px;
+    height: 2px;
+    background: #d1d5db;
+    margin: 4px 0;
+  }
+
+  .selectBtn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #1a73e8;
+    color: white;
+    font-weight: 600;
+  }
+}
+
+.leftHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.seats {
+  font-size: 13px;
+  color: #161717;
+  margin: 0;
+}
+
+.price {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #0c131d;
+}
+
+.baggage {
+  display: inline-flex;
+  background: rgba(67, 83, 106, 0.08);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0c131d;
+}
+
+.mobileWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.favoriteBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #f3f4f6;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.favoriteBtn:hover {
+  background: #e5e7eb;
+  transform: scale(1.05);
+}
+
+
+.favoriteBtn:active {
+  transform: scale(0.95);
+}
+
+.heart {
+  font-size: 18px;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+
+.active {
+  background: #e28e98; 
+}
+
+.favoriteBtn.active {
+  background: #f5d1d886; 
+}
+
+@media (max-width: 600px) {
+  .resultsSection {
+    padding: 0 16px; 
+  }
+
+  .ticketCard {
+    width: 100%;
+    max-width: 520px;   
+    margin: 16px auto 0; 
+    border-radius: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+
+  .routeRow {
+    align-items: center;
+    gap: 8px
+  }
+
+  .routeGrid {
+    align-items: center;
+    column-gap: 0px;
+    row-gap: 4px;
+    width: 100%;
+  }
+
+  
+
+  .pathContainer {
+    display: flex;
+    justify-content: center ;
+    align-items: center;
+    order:2;
+    padding: 0;
+  }
+
+  .pathVisual {
+    display: none;
+  }
+  
+
+  
+
+  .mobileInfo {
+    display: none;
+  }
+
+  .timeBlock {
+  width: 85px;
+}
+
+.timeBlockArrival {
+  width: 85px;
+  text-align: center;
+}
+}
+
