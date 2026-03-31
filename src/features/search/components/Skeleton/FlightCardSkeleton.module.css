@@ -1,0 +1,78 @@
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #e9edf3;
+  border-radius: 8px;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+/* размеры */
+
+.smallLine {
+  width: 120px;
+  height: 14px;
+}
+
+.price {
+  width: 160px;
+  height: 28px;
+  border-radius: 10px;
+}
+
+.badge {
+  width: 90px;
+  height: 20px;
+}
+
+.circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.time {
+  width: 60px;
+  height: 20px;
+}
+
+.text {
+  width: 80px;
+  height: 14px;
+}
+
+.textSmall {
+  width: 100px;
+  height: 12px;
+}
+
+.line {
+  width: 120px;
+  height: 2px;
+  align-self: center;
+}
+
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
