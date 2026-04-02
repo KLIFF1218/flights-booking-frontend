@@ -3,7 +3,6 @@
   flex-direction: column;
   gap: 24px;
 }
-
 .card {
   background: #ffffff;
   border-radius: 16px;
@@ -34,20 +33,85 @@
   color: #374151;
 }
 
-.field input,
-.field select {
+.field > input,
+.field > select {
   height: 40px;
   padding: 0 12px;
   border-radius: 10px;
   border: 1px solid #d1d5db;
   font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  background: #fff;
 }
 
-.field input:focus,
-.field select:focus {
+.field > input:focus,
+.field > select:focus {
   outline: none;
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
+
+.phoneRow {
+  display: flex;
+  gap: 12px;
+}
+
+.phoneCodeWrapper {
+  position: relative;
+  width: 90px;
+}
+
+.phoneCodeWrapper input {
+  width: 100%;
+  height: 40px;
+  padding-left: 26px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  background: #fff;
+}
+
+.phoneCodeWrapper input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.plus {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: #6b7280;
+  pointer-events: none;
+}
+
+.phoneNumber {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  background: #fff;
+}
+
+.phoneNumber:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+/* ================= BUTTON ================= */
 
 .submit {
   height: 48px;
@@ -58,9 +122,15 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.05s ease;
 }
 
 .submit:hover {
   background: #1d4ed8;
 }
 
+.submit:active {
+  transform: translateY(1px);
+}
