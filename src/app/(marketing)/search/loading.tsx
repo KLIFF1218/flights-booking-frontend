@@ -1,26 +1,16 @@
+import styles from "@/features/search/components/SearchResultsClient/SearchResultsClient.module.css";
+import { FlightCardSkeleton } from "@/features/search/components/Skeleton/FlightCardSkeleton";
+
 export default function Loading() {
   return (
-    <section
-      id="search-results"
-      style={{
-        minHeight: 320,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 12,
-      }}
-    >
-      <div className="spinner" />
-
-      <p
-        style={{
-          fontSize: 14,
-          color: "#4b5563",
-        }}
-      >
-        Ищем лучшие предложения по выбранному маршруту…
-      </p>
-    </section>
+    <div className={styles.cardsWrapper}>
+      <div className={styles.cardsDiv}>
+        <div className={styles.cardContainer}>
+          <FlightCardSkeleton />
+          <FlightCardSkeleton />
+          <FlightCardSkeleton />
+        </div>
+      </div>
+    </div>
   );
 }
