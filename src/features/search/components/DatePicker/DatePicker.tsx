@@ -5,6 +5,7 @@ import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { useState } from "react";
+import { X } from "lucide-react";
 
 import "react-day-picker/dist/style.css";
 import styles from "./DatePicker.module.css";
@@ -29,7 +30,23 @@ export function DatePicker({ value, onChange, fromDate, placeholder }: Props) {
           type="button"
           className={`${styles.trigger} ${value ? styles.filled : ""}`}
         >
-          {value ? format(value, "d MMMM, EEE", { locale: ru }) : placeholder}
+          <span className={styles.label}>
+            {value ? format(value, "d MMMM, EEE", { locale: ru }) : placeholder}
+          </span>
+
+          {value && (
+            <span
+              className={styles.clear}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+
+                onChange(undefined);
+              }}
+            >
+              <X size={16} />
+            </span>
+          )}
         </button>
       </Popover.Trigger>
 
