@@ -29,3 +29,29 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
+.label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 20px;
+  height: 20px;
+
+  border-radius: 999px;
+
+  color: #888;
+
+  transition: background 0.2s;
+}
+
+.clear:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
