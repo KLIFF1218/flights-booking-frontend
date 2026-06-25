@@ -44,8 +44,9 @@
   cursor: pointer;
 }
 
-.item:hover {
-  background: #f4f6fa;
+.item:hover,
+.itemActive {
+  background: #eef3ff;
 }
 
 .itemMuted {
