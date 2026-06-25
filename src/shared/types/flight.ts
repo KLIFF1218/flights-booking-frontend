@@ -25,6 +25,8 @@ export interface PricedFlight {
   price: {
     total: number;
     currency: string;
+    base?: number;
+    seats?: number;
   };
 
   travelers: Array<{
@@ -51,4 +53,3 @@ export interface PricedFlight {
 
   inbound?: PricedFlight["outbound"];
 }
-
