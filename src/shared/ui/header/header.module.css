@@ -1,0 +1,101 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.topBar {
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 72px;
+  padding: 0 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.logoIcon {
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+}
+
+.logoText {
+  font-size: 16px;
+  font-weight: 500;
+  color: white;
+  letter-spacing: -0.3px;
+}
+
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: -15px;
+}
+
+.iconBtn {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+  background: transparent;
+  border: 1px solid transparent;
+
+  color: #ffffff;
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: #3372f0;
+  border-color: #ffffff;
+}
+
+.iconBtn:active {
+  transform: scale(0.95);
+}
+
+.iconBtn svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 400px) {
+  .logoText {
+    display: none;
+  }
+}
+
+.notFixed {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  z-index: auto !important;
+}
