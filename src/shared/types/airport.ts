@@ -1,10 +1,7 @@
 export type AirportLocation = {
-  type: "location";
-  subType: "CITY" | "AIRPORT";
+  id: string;
   name: string;
-  detailedName: string;
+  city: string | null;
+  country: string;
   iataCode: string;
-  cityName: string;
-  countryName: string;
-  countryCode: string;
 };
