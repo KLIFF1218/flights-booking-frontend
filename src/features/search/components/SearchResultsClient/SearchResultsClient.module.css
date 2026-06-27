@@ -1,0 +1,29 @@
+.cardsWrapper {
+  background-color: #ffffff;
+  min-height: 100vh;
+  padding: 20px 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.cardsDiv {
+  width: 100%;
+  max-width: 480px;
+  min-width: 320px;
+}
+
+
+.cardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  .cardsDiv {
+    max-width: 800px;
+  }
+}
+
+
+
