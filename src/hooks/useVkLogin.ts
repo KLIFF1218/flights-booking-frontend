@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthStore } from "@/lib/auth-store";
 import {
   generateCodeVerifier,
   generateCodeChallenge,
@@ -8,7 +9,7 @@ import {
 import { initVk } from "@/features/auth/vk/vk-init";
 import { startVkLogin } from "@/features/auth/vk/vk-login";
 import { buildApiUrl } from "@/shared/api/buildApiUrl";
-import { setAccessToken, getAccessToken } from "@/shared/api/apiClient";
+import { setAccessToken, apiFetch } from "@/shared/api/apiClient";
 
 type User = {
   id: string;
@@ -29,6 +30,7 @@ type VkExchangeResponse = {
 
 export function useVkLogin() {
   const [loading, setLoading] = useState(false);
+  const { setUser } = useAuthStore();
 
   const login = async (): Promise<User | null> => {
     try {
@@ -67,17 +69,9 @@ export function useVkLogin() {
       }
 
       try {
-        const userResponse = await fetch(buildApiUrl("/users/me"), {
-          credentials: "include",
-          headers: {
-            Authorization: `Bearer ${getAccessToken() || ""}`,
-          },
-        });
-
-        if (userResponse.ok) {
-          const user = await userResponse.json();
-          return user;
-        }
+        const user = await apiFetch<User>("/users/me");
+        setUser(user);
+        return user;
       } catch (error) {
         console.warn(
           "Failed to fetch user profile, but auth succeeded:",
@@ -85,11 +79,13 @@ export function useVkLogin() {
         );
       }
 
-      return {
+      const fallbackUser: User = {
         id: "unknown",
         email: "user@vk",
         firstName: "VK User",
       };
+      setUser(fallbackUser);
+      return fallbackUser;
     } catch (error) {
       console.error(error);
       return null;
