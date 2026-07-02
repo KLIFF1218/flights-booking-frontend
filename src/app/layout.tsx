@@ -1,3 +1,5 @@
+import '@/app/globals.css';
+
 import { AuthInitializer } from "@/components/AuthInitializer";
 import { CurrencyInitializer } from "@/components/CurrencyInitializer";
 import { ThemeInitializer } from "@/components/ThemeInitializer";
