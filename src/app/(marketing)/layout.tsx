@@ -1,8 +1,4 @@
 import type { Metadata } from "next";
-import { Header } from "@/shared/ui/header/Header";
-import "../globals.css";
-import { HeroSearch } from "@/features/search/components/HeroSearch/HeroSearch";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "CheapTickets",
@@ -16,10 +12,6 @@ export default function RootLayout({
 }) {
   return (
     <>
-      <Header />
-      <Suspense fallback={null}>
-        <HeroSearch />
-      </Suspense>
       <main>{children}</main>
     </>
   );

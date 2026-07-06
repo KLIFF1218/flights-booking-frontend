@@ -1,18 +1,14 @@
 import { buildApiUrl } from "@/shared/api/buildApiUrl";
 import type { TravelerForm } from "@/features/booking/components/TravelersForm/TravelersForm";
+import { apiFetch } from "@/shared/api/apiClient";
 
-/**
- * Структура для отправки на бэкенд при бронировании рейса
- */
-export type CreateFlightOrderRequest = {
-  searchId: string;
-  offerId: string;
-  paymentProvider: "YOOKASSA" | "AMADEUS";
-  travelers: TravelerInputDto[];
-  seats?: string[];
+export type SeatSelection = {
+  travelerId: string;
+  segmentId: string;
+  seatNumber: string;
 };
 
-export type TravelerInputDto = {
+export type BookingTravelerInputDto = {
   id: string;
   dateOfBirth: string;
   gender: "MALE" | "FEMALE";
@@ -39,17 +35,37 @@ export type TravelerInputDto = {
   }>;
 };
 
-/**
- * Ответ от бэкенда при успешном бронировании
- */
-export type FlightBookingResponse = {
-  bookingId: string;
-  paymentRedirectUrl: string;
+export type TravelerInputDto = {
+  id: string;
+  dateOfBirth: string;
+  gender: "MALE" | "FEMALE";
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneCountryCode: string;
+  phoneNumber: string;
+  passportNumber: string;
+  passportIssuanceDate: string;
+  passportExpiry: string;
+  birthPlace: string;
+  nationality: string;
 };
 
-/**
- * Ответ от бэкенда при получении seatmap
- */
+export type CreateFlightOrderRequest = {
+  searchId: string;
+  offerId: string;
+  paymentProvider: "YOOKASSA" | "AMADEUS";
+  travelers: BookingTravelerInputDto[];
+  seats?: SeatSelection[];
+};
+
+export type FlightBookingResponse = {
+  bookingId: string;
+  paymentRedirectUrl: {
+    redirectUrl: string;
+  };
+};
+
 export type SeatMapUi = {
   segmentId: string;
   aircraft: string;
@@ -64,10 +80,30 @@ export type SeatMapUi = {
   >;
 };
 
-/**
- * Преобразовать TravelerForm в TravelerInputDto для отправки на бэкенд
- */
+
 function transformTravelerToDto(traveler: TravelerForm): TravelerInputDto {
+  return {
+    id: traveler.id,
+    firstName: traveler.firstName,
+    lastName: traveler.lastName,
+    gender: traveler.gender,
+    dateOfBirth: traveler.dateOfBirth,
+    email: traveler.email,
+    phoneCountryCode: traveler.phoneCountryCode,
+    phoneNumber: traveler.phoneNumber.replace(/\D/g, ""),
+    passportNumber: traveler.passportNumber,
+    passportIssuanceDate: traveler.passportIssuanceDate,
+    passportExpiry: traveler.passportExpiry,
+    birthPlace: traveler.birthPlace,
+    nationality: traveler.nationality,
+  };
+}
+
+function transformTravelerToOrderDto(
+  traveler: TravelerForm,
+): BookingTravelerInputDto {
+  const phoneNumber = traveler.phoneNumber.replace(/\D/g, "");
+
   return {
     id: traveler.id,
     dateOfBirth: traveler.dateOfBirth,
@@ -77,15 +113,17 @@ function transformTravelerToDto(traveler: TravelerForm): TravelerInputDto {
       lastName: traveler.lastName,
     },
     contact: {
-      emailAddress: traveler.email,
+      emailAddress: traveler.email || undefined,
       phones:
-        [
-            {
-              deviceType: "MOBILE",
-              countryCallingCode: traveler.phoneCountryCode,
-              number: traveler.phoneNumber.replace(/\D/g, ""),
-            },
-          ],
+        traveler.phoneCountryCode && phoneNumber
+          ? [
+              {
+                deviceType: "MOBILE",
+                countryCallingCode: traveler.phoneCountryCode,
+                number: phoneNumber,
+              },
+            ]
+          : undefined,
     },
     documents: [
       {
@@ -101,40 +139,52 @@ function transformTravelerToDto(traveler: TravelerForm): TravelerInputDto {
   };
 }
 
-/**
- * Получить карту мест для рейса по offer
- */
+
+type GridCell =
+  | { type: "EMPTY" }
+  | {
+      type: "FACILITY";
+      code: string;
+      label?: string;
+    }
+  | {
+      type: "SEAT";
+      seatNumber: string;
+      isAvailable: boolean;
+      minPrice: number | null;
+      features: {
+        exitRow: boolean;
+        extraLegroom: boolean;
+        premium: boolean;
+      };
+    };
+
+type SeatMapResponse = {
+  seatMaps: Array<{
+    segmentId: string;
+    aircraft: string;
+    cabin: string;
+    availableSeatsCount: number;
+    grid: GridCell[][];
+  }>;
+  unavailable: boolean;
+};
+
 export async function getSeatmap(
   searchId: string,
   offerId: string,
-): Promise<SeatMapUi[]> {
-  const url = buildApiUrl("/seatmaps/by-offer");
-
-  const response = await fetch(url, {
+): Promise<SeatMapResponse[]> {
+  const response = await apiFetch<SeatMapResponse[]>("/seatmaps/by-offer", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
     body: JSON.stringify({
       searchId,
       offerId,
     }),
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.message || `Failed to get seatmap: ${response.statusText}`,
-    );
-  }
-
-  return response.json();
+  return response;
 }
 
-/**
- * Отправить запрос на бронирование рейса на бэкенд (без мест)
- */
 export async function bookFlight(
   travelers: TravelerForm[],
   searchId: string,
@@ -147,36 +197,78 @@ export async function bookFlight(
     searchId,
     offerId,
     paymentProvider,
-    travelers: travelers.map(transformTravelerToDto),
+    travelers: travelers.map(transformTravelerToOrderDto),
   };
 
-  const response = await fetch(url, {
+  return apiFetch<FlightBookingResponse>(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
     body: JSON.stringify(request),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.message || `Failed to book flight: ${response.statusText}`,
-    );
-  }
-
-  return response.json();
 }
 
-/**
- * Подтвердить бронирование с выбранными местами и получить ссылку на оплату
- */
+export async function initBooking(
+  searchId: string,
+  offerId: string,
+): Promise<{ bookingId: string }> {
+  return apiFetch("/booking/", {
+    method: "POST",
+    body: JSON.stringify({
+      searchId,
+      offerId,
+    }),
+  });
+}
+
+export async function confirmSeatsAndPay(
+  bookingId: string,
+  seats: SeatSelection[],
+  searchId: string,
+  offerId: string,
+) {
+  return apiFetch(`/booking/${bookingId}/seats/confirm`, {
+    method: "POST",
+    body: JSON.stringify({
+      searchId,
+      offerId,
+      seats,
+    }),
+  });
+}
+
+export async function priceFlight(
+  searchId: string,
+  offerId: string,
+  travelers: TravelerForm[],
+) {
+  const adults = travelers.filter((t) => t.type === "adult").length;
+  const children = travelers.filter((t) => t.type === "child").length;
+  const infants = travelers.filter((t) => t.type === "infant").length;
+
+  return apiFetch("/flight/pricing", {
+    method: "POST",
+    body: JSON.stringify({
+      searchId,
+      offerId,
+      options: {
+        adults,
+        children,
+        infants,
+      },
+    }),
+  });
+}
+
+export async function getBooking(bookingId: string) {
+  return apiFetch(`/booking/${bookingId}`, {
+    method: "GET",
+  });
+}
+
 export async function confirmBookingWithSeats(
   travelers: TravelerForm[],
   searchId: string,
   offerId: string,
-  selectedSeats: string[],
+  selectedSeats: SeatSelection[],
   paymentProvider: "YOOKASSA" | "AMADEUS" = "YOOKASSA",
 ): Promise<FlightBookingResponse> {
   const url = buildApiUrl("/booking/confirm");
@@ -185,25 +277,152 @@ export async function confirmBookingWithSeats(
     searchId,
     offerId,
     paymentProvider,
-    travelers: travelers.map(transformTravelerToDto),
+    travelers: travelers.map(transformTravelerToOrderDto),
     seats: selectedSeats,
   };
 
-  const response = await fetch(url, {
+  const response = await apiFetch<FlightBookingResponse>(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include",
     body: JSON.stringify(request),
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.message || `Failed to confirm booking: ${response.statusText}`,
-    );
+  return response;
+}
+
+function transformTravelerToAddTravelerDto(traveler: TravelerForm) {
+  return {
+    firstName: traveler.firstName,
+    lastName: traveler.lastName,
+    gender: traveler.gender,
+    dateOfBirth: traveler.dateOfBirth,
+    email: traveler.email,
+    phoneCountryCode: traveler.phoneCountryCode,
+    phoneNumber: traveler.phoneNumber.replace(/\D/g, ""),
+    passportNumber: traveler.passportNumber,
+    passportIssuanceDate: traveler.passportIssuanceDate,
+    passportExpiry: traveler.passportExpiry,
+    birthPlace: traveler.birthPlace,
+    nationality: traveler.nationality,
+  };
+}
+
+export async function confirmTravelers(
+  bookingId: string,
+  travelers: TravelerForm[],
+) {
+  return apiFetch(`/booking/${bookingId}/travelers`, {
+    method: "POST",
+    body: JSON.stringify({
+      travelers: travelers.map(transformTravelerToAddTravelerDto),
+    }),
+  });
+}
+
+export async function confirmSeats(bookingId: string, seats: SeatSelection[]) {
+  return apiFetch(`/booking/${bookingId}/seats`, {
+    method: "POST",
+    body: JSON.stringify({
+      seats,
+    }),
+  });
+}
+
+export interface BookingSnapshot {
+  travelers: {
+    id: string;
+    dateOfBirth: string;
+    name: {
+      firstName: string;
+      lastName: string;
+    };
+  }[];
+
+  flightOffers: {
+    id: string;
+    price: {
+      total: string;
+      currency: string;
+    };
+    itineraries: {
+      duration: string;
+      segments: {
+        id: string;
+        number: string;
+        departure: {
+          at: string;
+          iataCode: string;
+        };
+        arrival: {
+          at: string;
+          iataCode: string;
+        };
+        carrierCode: string;
+      }[];
+    }[];
+  }[];
+}
+
+export interface AdminBooking {
+  id: string;
+  status: string;
+  totalPrice: number;
+  currency: string;
+  createdAt: string;
+  pnrLocator: string;
+
+  transaction: {
+    id: string;
+    status: string;
+  } | null;
+
+  snapshot: BookingSnapshot;
+
+  user: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+  };
+}
+
+interface AdminBookingsResponse {
+  data: AdminBooking[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export async function fetchBookings(
+  search = "",
+  status?: string,
+  page = 1,
+  limit = 20,
+): Promise<AdminBookingsResponse> {
+  const query = new URLSearchParams({
+    search,
+    page: String(page),
+    limit: String(limit),
+  });
+
+  if (status && status !== "all") {
+    query.append("status", status);
   }
 
-  return response.json();
+  return apiFetch<AdminBookingsResponse>(
+    `/admin/bookings?${query.toString()}`,
+    { method: "GET" },
+  );
+}
+
+export async function updateBookingStatus(id: string, status: string) {
+  return apiFetch(`/admin/bookings/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
 }

@@ -6,6 +6,11 @@ export interface User {
   email: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
+  country?: string;
+  citizenship?: string;
+  city?: string;
+  currency?: string;
 }
 
 export interface AuthState {
@@ -13,10 +18,12 @@ export interface AuthState {
   user: User | null;
   isLoading: boolean;
   isAuthorized: boolean;
+  authChecked: boolean;
 
   setToken: (token: string | null) => void;
   setUser: (user: User | null) => void;
   setIsLoading: (loading: boolean) => void;
+  setAuthChecked: (checked: boolean) => void;
   logout: () => void;
 }
 
@@ -27,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isLoading: false,
       isAuthorized: false,
+      authChecked: false,
 
       setToken: (token) =>
         set({
@@ -42,11 +50,14 @@ export const useAuthStore = create<AuthState>()(
 
       setIsLoading: (loading) => set({ isLoading: loading }),
 
+      setAuthChecked: (checked) => set({ authChecked: checked }),
+
       logout: () =>
         set({
           accessToken: null,
           user: null,
           isAuthorized: false,
+          authChecked: true,
         }),
     }),
     {

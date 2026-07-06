@@ -1,7 +1,9 @@
-import "./globals.css";
-import { AuthInitializer } from "@/components/AuthInitializer";
-import { Header } from "@/shared/ui/header/Header";
+import '@/app/globals.css';
 
+import { AuthInitializer } from "@/components/AuthInitializer";
+import { CurrencyInitializer } from "@/components/CurrencyInitializer";
+import { ThemeInitializer } from "@/components/ThemeInitializer";
+import { Header } from "@/shared/ui/header/Header";
 
 export default function RootLayout({
   children,
@@ -11,8 +13,9 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body>
-        {/* AuthInitializer must be at root level for hydration */}
         <AuthInitializer />
+        <CurrencyInitializer />
+        <ThemeInitializer />
 
         <Header />
 
