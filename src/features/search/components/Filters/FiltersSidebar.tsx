@@ -1,64 +1,81 @@
-"use client"
+"use client";
 
-import { RotateCcw } from "lucide-react"
-import { useState, useEffect } from "react"
+import { RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export type FiltersState = {
-  maxPrice: number
-  stops: number[]
-  airlines: string[]
-  durations: string[]
-}
+  maxPrice: number;
+  stops: number[];
+  airlines: string[];
+  durations: string[];
+};
 
 type Props = {
-  onChange: (filters: FiltersState) => void
-  flightsData?: any
-}
+  onChange: (filters: FiltersState) => void;
+  flightsData?: any;
+};
 
 export function FilterSidebar({ onChange, flightsData }: Props) {
-
-  const [filters, setFilters] = useState<FiltersState>({
-    maxPrice: 0,
+  const [filters, setFilters] = useState<FiltersState>(() => ({
+    maxPrice: flightsData?.filters?.maxPrice ?? 0,
     stops: [],
     airlines: [],
     durations: [],
-  })
+  }));
+
+  const initializedRef = useState({ current: false })[0] as {
+    current: boolean;
+  };
 
   useEffect(() => {
-    if (!flightsData?.filters) return
+    if (!flightsData?.filters) return;
 
-    setFilters((prev) => ({
-      ...prev,
-      maxPrice: flightsData.filters.maxPrice,
-    }))
-  }, [flightsData])
+    if (!initializedRef.current) {
+      setFilters({
+        maxPrice: flightsData.filters.maxPrice,
+        stops: [],
+        airlines: [],
+        durations: [],
+      });
+      initializedRef.current = true;
+    } else {
+      // keep existing selections but update available maxPrice when new data arrives
+      setFilters((prev) => ({
+        ...prev,
+        maxPrice: flightsData.filters.maxPrice,
+      }));
+    }
+  }, [flightsData]);
 
   useEffect(() => {
-    onChange(filters)
-  }, [filters, onChange])
+    // don't emit changes until initial values were populated from server
+    if (!initializedRef.current) return;
+
+    onChange(filters);
+  }, [filters, onChange]);
 
   function toggleArrayFilter(key: keyof FiltersState, value: string | number) {
     setFilters((prev) => {
-      const list = prev[key] as any[]
+      const list = prev[key] as any[];
 
       return {
         ...prev,
         [key]: list.includes(value)
           ? list.filter((v) => v !== value)
           : [...list, value],
-      }
-    })
+      };
+    });
   }
 
   function resetFilters() {
-    if (!flightsData?.filters) return
+    if (!flightsData?.filters) return;
 
     setFilters({
       maxPrice: flightsData.filters.maxPrice,
       stops: [],
       airlines: [],
       durations: [],
-    })
+    });
   }
 
   if (!flightsData?.filters) {
@@ -66,12 +83,11 @@ export function FilterSidebar({ onChange, flightsData }: Props) {
       <div className="w-full lg:w-80 bg-white rounded-2xl border border-gray-200 p-6">
         Loading filters...
       </div>
-    )
+    );
   }
 
   return (
     <div className="w-full lg:w-80 bg-white rounded-2xl border border-gray-200 p-6 sticky top-24">
-      
       <div className="flex justify-between mb-6">
         <h3 className="font-semibold">Фильтры</h3>
         <button
@@ -108,16 +124,17 @@ export function FilterSidebar({ onChange, flightsData }: Props) {
         <h4 className="font-medium mb-2">Пересадки</h4>
 
         {flightsData.filters.stops.map((stop: any) => (
-          <label key={stop.stops} className="flex items-center gap-2 cursor-pointer">
+          <label
+            key={stop.stops}
+            className="flex items-center gap-2 cursor-pointer"
+          >
             <input
               type="checkbox"
               checked={filters.stops.includes(stop.stops)}
               onChange={() => toggleArrayFilter("stops", stop.stops)}
             />
-
-            {stop.stops === 0
-              ? "Без пересадок"
-              : `${stop.stops} пересадка(-и)`} ({stop.count})
+            {stop.stops === 0 ? "Без пересадок" : `${stop.stops} пересадка(-и)`}{" "}
+            ({stop.count})
           </label>
         ))}
       </div>
@@ -126,13 +143,15 @@ export function FilterSidebar({ onChange, flightsData }: Props) {
         <h4 className="font-medium mb-2">Авиакомпании</h4>
 
         {flightsData.filters.airlines.map((airline: any) => (
-          <label key={airline.name} className="flex items-center gap-2 cursor-pointer">
+          <label
+            key={airline.name}
+            className="flex items-center gap-2 cursor-pointer"
+          >
             <input
               type="checkbox"
               checked={filters.airlines.includes(airline.name)}
               onChange={() => toggleArrayFilter("airlines", airline.name)}
             />
-
             {airline.name} ({airline.count})
           </label>
         ))}
@@ -154,5 +173,5 @@ export function FilterSidebar({ onChange, flightsData }: Props) {
         ))}
       </div>
     </div>
-  )
+  );
 }
