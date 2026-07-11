@@ -1,6 +1,14 @@
 "use client";
 
-import { Calendar, User, PlaneTakeoff, PlaneLanding, Loader2 } from "lucide-react";
+import {
+  Calendar,
+  User,
+  PlaneTakeoff,
+  PlaneLanding,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo, useTransition } from "react";
 import { format, isValid, parseISO } from "date-fns";
@@ -32,7 +40,11 @@ function pluralizePassengers(n: number) {
   return "пассажиров";
 }
 
-export function HeroSearch() {
+type HeroSearchProps = {
+  compact?: boolean;
+};
+
+export function HeroSearch({ compact = false }: HeroSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -79,11 +91,18 @@ export function HeroSearch() {
   });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isExpanded, setIsExpanded] = useState(!compact);
 
   const passengersLabel = useMemo(
     () => formatPassengers(passengers, travelClass),
     [passengers, travelClass],
   );
+
+  const summaryLabel = useMemo(() => {
+    const fromLabel = origin || "Откуда";
+    const toLabel = destination || "Куда";
+    return `${fromLabel} → ${toLabel}`;
+  }, [origin, destination]);
 
   function isIata(value: string) {
     return /^[A-Z]{3}$/.test(value);
@@ -137,93 +156,115 @@ export function HeroSearch() {
     params.set("travelClass", travelClass);
 
     startTransition(() => {
+      setIsExpanded(false);
       router.push(`/search?${params.toString()}#search-results`);
     });
   }
 
   return (
-    <section className={styles.hero}>
-
-      <form className={styles.form} onSubmit={onSubmit}>
-        <div className={styles.formInner}>
-          <div className={styles.field}>
-            <PlaneTakeoff className={styles.icon} />
-            <AirportInput
-              value={origin}
-              placeholder="Откуда"
-              onSelect={setOrigin}
-              exclude={destination}
-              className={styles.input}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <PlaneLanding className={styles.icon} />
-            <AirportInput
-              value={destination}
-              placeholder="Куда"
-              exclude={origin}
-              onSelect={setDestination}
-              className={styles.input}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <Calendar className={styles.icon} />
-            <DatePicker
-              value={departureDate}
-              placeholder="Дата вылета"
-              onChange={(date) => {
-                setDepartureDate(date);
-
-                if (returnDate && date && returnDate < date) {
-                  setReturnDate(undefined);
-                }
-              }}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <Calendar className={styles.icon} />
-            <DatePicker
-              value={returnDate}
-              fromDate={departureDate}
-              placeholder="Обратно"
-              onChange={setReturnDate}
-            />
-          </div>
-
-          <div className={styles.field}>
-            <User className={styles.icon} />
-            <PassengerClassDialog
-              value={{ passengers, travelClass }}
-              label={passengersLabel}
-              onApply={({ passengers, travelClass }) => {
-                setPassengers(passengers);
-                setTravelClass(travelClass);
-              }}
-            />
-          </div>
-
+    <section className={`${styles.hero} ${compact ? styles.compactHero : ""}`}>
+      <div className={`${styles.panel} ${compact ? styles.compactPanel : ""}`}>
+        {compact && (
           <button
-            type="submit"
-            className={styles.submit}
-            disabled={isPending}
-            aria-busy={isPending}
+            type="button"
+            className={styles.summaryToggle}
+            onClick={() => setIsExpanded((value) => !value)}
           >
-            {isPending ? (
-              <>
-                <Loader2 className={styles.spinner} />
-                Поиск...
-              </>
-            ) : (
-              "Найти билеты"
-            )}
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryRoute}>{summaryLabel}</span>
+              <span className={styles.summaryMeta}>
+                {departureDate ? format(departureDate, "d MMM") : "Choose date"}
+                {returnDate ? ` · ${format(returnDate, "d MMM")}` : ""}
+              </span>
+              <span className={styles.summaryMeta}>{passengersLabel}</span>
+            </div>
+            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
-        </div>
+        )}
 
-        {error && <div className={styles.error}>{error}</div>}
-      </form>
+        {(!compact || isExpanded) && (
+          <form className={styles.form} onSubmit={onSubmit}>
+            <div className={styles.formInner}>
+              <div className={styles.field}>
+                <PlaneTakeoff className={styles.icon} />
+                <AirportInput
+                  value={origin}
+                  placeholder="Откуда"
+                  onSelect={setOrigin}
+                  exclude={destination}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <PlaneLanding className={styles.icon} />
+                <AirportInput
+                  value={destination}
+                  placeholder="Куда"
+                  exclude={origin}
+                  onSelect={setDestination}
+                  className={styles.input}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <Calendar className={styles.icon} />
+                <DatePicker
+                  value={departureDate}
+                  placeholder="Дата вылета"
+                  onChange={(date) => {
+                    setDepartureDate(date);
+
+                    if (returnDate && date && returnDate < date) {
+                      setReturnDate(undefined);
+                    }
+                  }}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <Calendar className={styles.icon} />
+                <DatePicker
+                  value={returnDate}
+                  fromDate={departureDate}
+                  placeholder="Обратно"
+                  onChange={setReturnDate}
+                />
+              </div>
+
+              <div className={styles.field}>
+                <User className={styles.icon} />
+                <PassengerClassDialog
+                  value={{ passengers, travelClass }}
+                  label={passengersLabel}
+                  onApply={({ passengers, travelClass }) => {
+                    setPassengers(passengers);
+                    setTravelClass(travelClass);
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className={styles.submit}
+                disabled={isPending}
+                aria-busy={isPending}
+              >
+                {isPending ? (
+                  <>
+                    <Loader2 className={styles.spinner} />
+                    Поиск...
+                  </>
+                ) : (
+                  "Найти билеты"
+                )}
+              </button>
+            </div>
+
+            {error && <div className={styles.error}>{error}</div>}
+          </form>
+        )}
+      </div>
     </section>
   );
 }
