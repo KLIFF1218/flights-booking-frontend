@@ -7,6 +7,53 @@
   overflow: visible;
 }
 
+.compactHero {
+  padding: 12px 20px 0;
+}
+
+.panel {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.compactPanel {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  padding: 12px;
+}
+
+.summaryToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px 4px 8px;
+}
+
+.summaryContent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.summaryRoute {
+  font-weight: 700;
+  color: #111827;
+}
+
+.summaryMeta {
+  color: #6b7280;
+  font-size: 13px;
+}
+
 @keyframes skyFlow {
   0% {
     background-position: 0% 50%;
@@ -93,7 +140,9 @@
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition:
+    transform 0.2s,
+    background 0.2s;
   margin: 4px;
   white-space: nowrap;
   display: inline-flex;
