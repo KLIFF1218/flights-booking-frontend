@@ -8,10 +8,9 @@
 
 .cardsDiv {
   width: 100%;
-  max-width: 480px;
-  min-width: 320px;
+  max-width: 100%;
+  min-width: 0;
 }
-
 
 .cardContainer {
   display: flex;
@@ -21,9 +20,6 @@
 
 @media (min-width: 768px) {
   .cardsDiv {
-    max-width: 800px;
+    max-width: 860px;
   }
 }
-
-
-
