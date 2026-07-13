@@ -1,28 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Trash2 } from "lucide-react";
-
-export type TravelerForm = {
-  id: string;
-  type: "adult" | "child" | "infant";
-
-  firstName: string;
-  lastName: string;
-  gender: "MALE" | "FEMALE";
-  dateOfBirth: string;
-
-  email: string;
-  phoneCountryCode: string;
-  phoneNumber: string;
-
-  passportNumber: string;
-  passportIssuanceDate: string;
-  passportExpiry: string;
-
-  birthPlace: string;
-  nationality: string;
-};
+import type { FieldError } from "react-hook-form";
+import type {
+  TravelerForm,
+  TravelersFormValues,
+} from "@/features/booking/validation/traveler.schema";
 
 const inputClass =
   "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -32,34 +16,21 @@ const selectClass =
 
 export function TravelersForm({
   travelers,
-  setTravelers,
   onDeletePassenger,
 }: {
   travelers: TravelerForm[];
-  setTravelers: React.Dispatch<React.SetStateAction<TravelerForm[]>>;
   onDeletePassenger: (id: string) => void;
 }) {
-  function updateTraveler(
-    index: number,
-    field: keyof TravelerForm,
-    value: string,
-  ) {
-    setTravelers((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
-      return copy;
-    });
-  }
-
-  const counters = {
-    adult: 0,
-    child: 0,
-    infant: 0,
-  };
+  const {
+    register,
+    formState: { errors },
+  } = useFormContext<TravelersFormValues>();
+  const watchedTravelers = useWatch<TravelersFormValues>({ name: "travelers" });
+  const currentTravelers = (watchedTravelers ?? travelers) as TravelerForm[];
 
   return (
     <div className="space-y-6">
-      {travelers.map((t, i) => {
+      {currentTravelers.map((t, i) => {
         const typeLabels: Record<TravelerForm["type"], string> = {
           adult: "взрослый",
           child: "ребенок",
@@ -89,28 +60,24 @@ export function TravelersForm({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Место рождения (латиницей)">
+              <Field
+                label="Место рождения (латиницей)"
+                error={errors.travelers?.[i]?.birthPlace}
+              >
                 <input
+                  {...register(`travelers.${i}.birthPlace`)}
                   className={inputClass}
-                  value={t.birthPlace}
-                  onChange={(e) =>
-                    updateTraveler(
-                      i,
-                      "birthPlace",
-                      e.target.value.toUpperCase(),
-                    )
-                  }
                   placeholder="MOSCOW"
                 />
               </Field>
 
-              <Field label="Гражданство">
+              <Field
+                label="Гражданство"
+                error={errors.travelers?.[i]?.nationality}
+              >
                 <select
+                  {...register(`travelers.${i}.nationality`)}
                   className={selectClass}
-                  value={t.nationality}
-                  onChange={(e) =>
-                    updateTraveler(i, "nationality", e.target.value)
-                  }
                 >
                   <option value="RU">Россия</option>
                   <option value="UA">Украина</option>
@@ -119,46 +86,37 @@ export function TravelersForm({
                 </select>
               </Field>
 
-              <Field label="Имя">
+              <Field label="Имя" error={errors.travelers?.[i]?.firstName}>
                 <input
+                  {...register(`travelers.${i}.firstName`)}
                   className={inputClass}
-                  value={t.firstName}
-                  onChange={(e) =>
-                    updateTraveler(i, "firstName", e.target.value)
-                  }
                   placeholder="IVAN"
                 />
               </Field>
 
-              <Field label="Фамилия">
+              <Field label="Фамилия" error={errors.travelers?.[i]?.lastName}>
                 <input
+                  {...register(`travelers.${i}.lastName`)}
                   className={inputClass}
-                  value={t.lastName}
-                  onChange={(e) =>
-                    updateTraveler(i, "lastName", e.target.value)
-                  }
                   placeholder="IVANOV"
                 />
               </Field>
 
-              <Field label="Дата рождения">
+              <Field
+                label="Дата рождения"
+                error={errors.travelers?.[i]?.dateOfBirth}
+              >
                 <input
                   type="date"
+                  {...register(`travelers.${i}.dateOfBirth`)}
                   className={inputClass}
-                  value={t.dateOfBirth}
-                  onChange={(e) =>
-                    updateTraveler(i, "dateOfBirth", e.target.value)
-                  }
                 />
               </Field>
 
-              <Field label="Пол">
+              <Field label="Пол" error={errors.travelers?.[i]?.gender}>
                 <select
+                  {...register(`travelers.${i}.gender`)}
                   className={selectClass}
-                  value={t.gender}
-                  onChange={(e) =>
-                    updateTraveler(i, "gender", e.target.value as any)
-                  }
                 >
                   <option value="MALE">Мужской</option>
                   <option value="FEMALE">Женский</option>
@@ -167,14 +125,11 @@ export function TravelersForm({
 
               {i === 0 && (
                 <div className="sm:col-span-2">
-                  <Field label="Email">
+                  <Field label="Email" error={errors.travelers?.[i]?.email}>
                     <input
                       type="email"
+                      {...register(`travelers.${i}.email`)}
                       className={inputClass}
-                      value={t.email}
-                      onChange={(e) =>
-                        updateTraveler(i, "email", e.target.value)
-                      }
                       placeholder="example@email.com"
                     />
                   </Field>
@@ -183,35 +138,27 @@ export function TravelersForm({
 
               {i === 0 && (
                 <div className="sm:col-span-2">
-                  <Field label="Телефон">
+                  <Field
+                    label="Телефон"
+                    error={
+                      errors.travelers?.[i]?.phoneNumber ||
+                      errors.travelers?.[i]?.phoneCountryCode
+                    }
+                  >
                     <div className="flex gap-2">
                       <div className="flex items-center border border-gray-300 rounded-md shadow-sm px-3 py-2 w-20">
                         <span className="text-gray-500">+</span>
                         <input
                           maxLength={3}
-                          value={t.phoneCountryCode}
-                          onChange={(e) =>
-                            updateTraveler(
-                              i,
-                              "phoneCountryCode",
-                              e.target.value.replace(/\D/g, ""),
-                            )
-                          }
-                          placeholder="7"
+                          {...register(`travelers.${i}.phoneCountryCode`)}
                           className="w-full focus:outline-none"
+                          placeholder="7"
                         />
                       </div>
 
                       <input
+                        {...register(`travelers.${i}.phoneNumber`)}
                         className={inputClass}
-                        value={t.phoneNumber}
-                        onChange={(e) =>
-                          updateTraveler(
-                            i,
-                            "phoneNumber",
-                            e.target.value.replace(/\D/g, ""),
-                          )
-                        }
                         placeholder="9991234567"
                       />
                     </div>
@@ -219,37 +166,37 @@ export function TravelersForm({
                 </div>
               )}
 
-              <Field label="Номер паспорта">
+              <Field
+                label="Номер паспорта"
+                error={errors.travelers?.[i]?.passportNumber}
+              >
                 <input
+                  {...register(`travelers.${i}.passportNumber`)}
                   className={inputClass}
-                  value={t.passportNumber}
-                  onChange={(e) =>
-                    updateTraveler(i, "passportNumber", e.target.value)
-                  }
                   placeholder="1234 567890"
                 />
               </Field>
 
-              <Field label="Дата выдачи паспорта">
+              <Field
+                label="Дата выдачи паспорта"
+                error={errors.travelers?.[i]?.passportIssuanceDate}
+              >
                 <input
                   type="date"
+                  {...register(`travelers.${i}.passportIssuanceDate`)}
                   className={inputClass}
-                  value={t.passportIssuanceDate}
-                  onChange={(e) =>
-                    updateTraveler(i, "passportIssuanceDate", e.target.value)
-                  }
                 />
               </Field>
 
               <div className="sm:col-span-2">
-                <Field label="Срок действия паспорта">
+                <Field
+                  label="Срок действия паспорта"
+                  error={errors.travelers?.[i]?.passportExpiry}
+                >
                   <input
                     type="date"
+                    {...register(`travelers.${i}.passportExpiry`)}
                     className={inputClass}
-                    value={t.passportExpiry}
-                    onChange={(e) =>
-                      updateTraveler(i, "passportExpiry", e.target.value)
-                    }
                   />
                 </Field>
               </div>
@@ -264,14 +211,19 @@ export function TravelersForm({
 function Field({
   label,
   children,
+  error,
 }: {
   label: string;
   children: React.ReactNode;
+  error?: FieldError;
 }) {
   return (
     <label className="flex flex-col text-sm font-medium text-gray-700">
       <span className="h-10 flex items-end">{label}</span>
       {children}
+      {error?.message ? (
+        <span className="mt-1 text-sm text-red-600">{error.message}</span>
+      ) : null}
     </label>
   );
 }
