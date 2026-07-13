@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useBookingStore } from "@/features/booking/store/booking.store";
 import { PriceUpdateModal } from "@/features/search/components/PriceUpdateModal/PriceUpdateModal";
 
@@ -13,14 +13,12 @@ import {
   FilterSidebar,
   FiltersState,
 } from "@/features/search/components/Filters/FiltersSidebar";
-import { SearchSummary } from "../Filters/SearchSummary";
-import { Header } from "@/shared/ui/header/Header";
 
 import type { PricedFlight } from "@/shared/types/flight";
-import { buildApiUrl } from "@/shared/api/buildApiUrl";
+import type { FlightCardResponse } from "@/shared/types/search-response";
 import { apiFetch } from "@/shared/api/apiClient";
 
-import { ArrowLeft, ArrowUp } from "lucide-react";
+import { ArrowUp } from "lucide-react";
 
 import styles from "./SearchResultsClient.module.css";
 import { getCurrency } from "@/shared/utils/currency";
@@ -29,9 +27,26 @@ type SearchStatus = "idle" | "loading" | "success" | "error";
 
 type SortOption = "best" | "cheapest" | "fastest" | "departure" | "arrival";
 
+const SORT_TO_BACKEND: Record<SortOption, string> = {
+  best: "BEST",
+  cheapest: "CHEAPEST",
+  fastest: "FASTEST",
+  departure: "DEPARTURE",
+  arrival: "ARRIVAL",
+};
+
+interface FlightsSearchResponse {
+  searchId: string;
+  data: FlightCardResponse[];
+  expiresAt?: string;
+  links?: {
+    next?: string | null;
+    prev?: string | null;
+  } | null;
+}
+
 export function SearchResultsClient() {
   const searchParams = useSearchParams();
-  const router = useRouter();
 
   const setOrder = useBookingStore((s) => s.setOrder);
   const setFlight = useBookingStore((s) => s.setFlight);
@@ -46,7 +61,10 @@ export function SearchResultsClient() {
   const [sortBy, setSortBy] = useState<SortOption>("best");
 
   const [status, setStatus] = useState<SearchStatus>("idle");
-  const [flights, setFlights] = useState<any | null>(null);
+  const [flights, setFlights] = useState<FlightsSearchResponse | null>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [pricingState, setPricingState] = useState<{
     status: "idle" | "loading" | "success" | "error";
     flight: PricedFlight | null;
@@ -55,13 +73,11 @@ export function SearchResultsClient() {
     flight: null,
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [visibleCount, setVisibleCount] = useState(10);
 
   const [priceModalOpen, setPriceModalOpen] = useState(false);
 
-  const [isRefreshingSearch, setIsRefreshingSearch] = useState(false);
-
   const containerRef = useRef<HTMLDivElement>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const isDetailsOpen =
     pricingState.status === "loading" || pricingState.status === "success";
@@ -94,7 +110,18 @@ export function SearchResultsClient() {
     });
   }
 
-  async function runSearch() {
+  function extractCursorFromLink(link: string | null): string | null {
+    if (!link) return null;
+
+    try {
+      const url = new URL(link, window.location.origin);
+      return url.searchParams.get("cursor");
+    } catch {
+      return null;
+    }
+  }
+
+  const runSearch = useCallback(async () => {
     const from = searchParams.get("from");
     const to = searchParams.get("to");
     const dateFrom = searchParams.get("dateFrom");
@@ -129,35 +156,49 @@ export function SearchResultsClient() {
         });
       }
 
-      const data = await apiFetch("/flights/search", {
-        method: "POST",
-        body: JSON.stringify({
-          directions,
-          passengers: {
-            adults: Number(adults),
-            children: Number(children),
-            infants: Number(infants),
-          },
-          travelClass,
-          currencyCode,
-        }),
-      });
+      const data = await apiFetch<FlightsSearchResponse>(
+        `/flights/search?sort=${SORT_TO_BACKEND[sortBy]}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            directions,
+            passengers: {
+              adults: Number(adults),
+              children: Number(children),
+              infants: Number(infants),
+            },
+            travelClass,
+            currencyCode,
+          }),
+        },
+      );
+
 
       setFlights(data);
-
-      setVisibleCount(10);
-
+      setNextCursor(extractCursorFromLink(data.links?.next ?? null));
+      setHasMore(Boolean(data.links?.next));
       setStatus("success");
+
+      requestAnimationFrame(() => {
+        const results = document.getElementById("search-results");
+
+        if (!results) return;
+
+        window.scrollTo({
+          top: results.getBoundingClientRect().top + window.scrollY - 96,
+          behavior: "smooth",
+        });
+      });
     } catch (error) {
       console.error("Flight search error:", error);
 
       setStatus("error");
     }
-  }
+  }, [searchParams, sortBy]);
 
   useEffect(() => {
     runSearch();
-  }, [searchParams]);
+  }, [runSearch]);
 
   useEffect(() => {
     if (!flights?.expiresAt) {
@@ -192,6 +233,61 @@ export function SearchResultsClient() {
       clearTimeout(timer);
     };
   }, [flights?.expiresAt]);
+
+  const loadNextPage = useCallback(async () => {
+    if (!flights?.searchId || !nextCursor || isLoadingMore) return;
+
+    setIsLoadingMore(true);
+
+    try {
+      const nextPage = await apiFetch<FlightsSearchResponse>(
+        `/flights/search/${flights.searchId}?cursor=${encodeURIComponent(nextCursor)}&limit=10&sort=${SORT_TO_BACKEND[sortBy]}`,
+      );
+
+      setFlights((prev) => {
+        if (!prev) return nextPage;
+
+        const mergedData = [...prev.data, ...nextPage.data];
+        const uniqueData = dedupeFlights(mergedData);
+
+        return {
+          ...prev,
+          data: uniqueData,
+          links: nextPage.links ?? null,
+        };
+      });
+      setNextCursor(extractCursorFromLink(nextPage.links?.next ?? null));
+      setHasMore(Boolean(nextPage.links?.next));
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [flights?.searchId, nextCursor, isLoadingMore, sortBy, flights]);
+
+  useEffect(() => {
+    if (!hasMore) return;
+
+    const element = loadMoreRef.current;
+
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && hasMore) {
+          loadNextPage();
+        }
+      },
+      {
+        rootMargin: "500px",
+        threshold: 0,
+      },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isLoadingMore, loadNextPage]);
 
   async function handleSelectFlight({
     searchId,
@@ -255,8 +351,6 @@ export function SearchResultsClient() {
 
   async function handleRefreshSearch() {
     try {
-      setIsRefreshingSearch(true);
-
       setPriceModalOpen(false);
 
       setPricingState({
@@ -266,23 +360,86 @@ export function SearchResultsClient() {
 
       await runSearch();
     } finally {
-      setIsRefreshingSearch(false);
     }
+  }
+
+  async function handleSortChange(nextSort: SortOption) {
+    if (!flights?.searchId) return;
+
+    setSortBy(nextSort);
+    setStatus("loading");
+
+    try {
+      const sortedPage = await apiFetch<FlightsSearchResponse>(
+        `/flights/search/${flights.searchId}?limit=10&sort=${SORT_TO_BACKEND[nextSort]}`,
+      );
+
+      setFlights({
+        ...flights,
+        data: dedupeFlights(sortedPage.data),
+        links: sortedPage.links ?? null,
+      });
+
+      setNextCursor(extractCursorFromLink(sortedPage?.links?.next ?? null));
+      setHasMore(Boolean(sortedPage?.links?.next));
+      setStatus("success");
+
+      requestAnimationFrame(() => {
+        const results = document.getElementById("search-results");
+
+        if (!results) return;
+
+        window.scrollTo({
+          top: results.getBoundingClientRect().top + window.scrollY - 96,
+          behavior: "smooth",
+        });
+      });
+    } catch (error) {
+      console.error("Flight sort error:", error);
+      setStatus("error");
+    }
+  }
+
+  function dedupeFlights(flightsList: FlightCardResponse[]) {
+    const seen = new Set<string>();
+
+    return flightsList.filter((flight) => {
+      if (!flight?.offerId) return false;
+      if (seen.has(flight.offerId)) return false;
+      seen.add(flight.offerId);
+      return true;
+    });
   }
 
   function getFilteredFlights() {
     if (!flights) return [];
 
-    return flights.data.filter((flight: any) => {
+    return flights.data.filter((flight: FlightCardResponse) => {
       const price = Number(flight.price.total);
       if (price > filters.maxPrice) return false;
 
       const stops = flight.routes[0]?.stops ?? 0;
       if (filters.stops.length && !filters.stops.includes(stops)) return false;
 
-      const airline = flight.routes[0]?.airline;
-      if (filters.airlines.length && !filters.airlines.includes(airline))
-        return false;
+      if (filters.airlines.length) {
+        const flightAirlines = new Set<string>();
+
+        for (const route of flight.routes) {
+          if (route.airline) flightAirlines.add(route.airline);
+          // runtime may include airlineIata even if types don't declare it
+          if ((route as any).airlineIata)
+            flightAirlines.add((route as any).airlineIata);
+
+          for (const seg of route.segments) {
+            if (seg.airline) flightAirlines.add(seg.airline);
+            if ((seg as any).airlineIata)
+              flightAirlines.add((seg as any).airlineIata);
+          }
+        }
+
+        const matches = filters.airlines.some((a) => flightAirlines.has(a));
+        if (!matches) return false;
+      }
 
       const duration = flight.routes[0]?.durationMinutes ?? 0;
       if (filters.durations.length) {
@@ -307,39 +464,6 @@ export function SearchResultsClient() {
     });
   }
 
-  function getSortedFlights() {
-    const list = [...getFilteredFlights()];
-
-    switch (sortBy) {
-      case "cheapest":
-        return list.sort(
-          (a, b) => Number(a.price.total) - Number(b.price.total),
-        );
-
-      case "fastest":
-        return list.sort(
-          (a, b) => a.totalDurationMinutes - b.totalDurationMinutes,
-        );
-
-      case "departure":
-        return list.sort(
-          (a, b) =>
-            new Date(a.routes[0].departure.time).getTime() -
-            new Date(b.routes[0].departure.time).getTime(),
-        );
-
-      case "arrival":
-        return list.sort(
-          (a, b) =>
-            new Date(a.routes[0].arrival.time).getTime() -
-            new Date(b.routes[0].arrival.time).getTime(),
-        );
-
-      default:
-        return list;
-    }
-  }
-
   const sortOptions = [
     { value: "best", label: "Best" },
     { value: "cheapest", label: "Cheapest" },
@@ -347,6 +471,10 @@ export function SearchResultsClient() {
     { value: "departure", label: "Departure" },
     { value: "arrival", label: "Arrival" },
   ];
+
+  const filteredFlights = getFilteredFlights();
+  const hasResults =
+    status === "success" && flights && filteredFlights.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50" ref={containerRef}>
@@ -373,7 +501,9 @@ export function SearchResultsClient() {
                     {sortOptions.map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => setSortBy(option.value as SortOption)}
+                        onClick={() =>
+                          handleSortChange(option.value as SortOption)
+                        }
                         className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
                           sortBy === option.value
                             ? "bg-blue-600 text-white"
@@ -391,41 +521,55 @@ export function SearchResultsClient() {
             <div className={styles.cardsDiv}>
               <div className={styles.cardContainer}>
                 {status === "loading" && (
-                  <>
+                  <div className="space-y-4">
                     <FlightCardSkeleton />
                     <FlightCardSkeleton />
                     <FlightCardSkeleton />
                     <FlightCardSkeleton />
-                    <FlightCardSkeleton />
-                    <FlightCardSkeleton />
-                  </>
+                  </div>
                 )}
 
-                {status === "success" && flights && (
+                {status === "success" && flights && hasResults && (
                   <>
                     <FlightCard
-                      flights={getSortedFlights().slice(0, visibleCount)}
+                      flights={filteredFlights}
                       searchId={flights.searchId}
                       onSelect={handleSelectFlight}
                       disabled={pricingState.status === "loading"}
                       sortBy={sortBy}
                     />
-                    {visibleCount < getSortedFlights().length && (
-                      <div className="text-center mt-8">
-                        <button
-                          onClick={() => setVisibleCount((prev) => prev + 10)}
-                          className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:border-blue-600 hover:text-blue-600 transition"
-                        >
-                          Load More Flights
-                        </button>
-                      </div>
-                    )}
+                    <div ref={loadMoreRef} className="mt-8 flex justify-center">
+                      {isLoadingMore && (
+                        <div className="space-y-4 w-full">
+                          <FlightCardSkeleton />
+                          <FlightCardSkeleton />
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 
+                {status === "success" && flights && !hasResults && (
+                  <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center">
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      No flights matched this search
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-600">
+                      Try adjusting your date, route or filters and search
+                      again.
+                    </p>
+                  </div>
+                )}
+
                 {status === "error" && (
-                  <div className="text-center py-10 text-red-500">
-                    Failed to load flights
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
+                    <h3 className="text-lg font-semibold">
+                      We could not load flights right now
+                    </h3>
+                    <p className="mt-2 text-sm">
+                      Please try again in a moment or change your search
+                      parameters.
+                    </p>
                   </div>
                 )}
               </div>
