@@ -2,6 +2,8 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useBookingStore } from "@/features/booking/store/booking.store";
 import { PassengerModal } from "@/features/booking/components/PassengerModal";
 
@@ -12,13 +14,37 @@ import {
   priceFlight,
 } from "@/features/booking/api/booking.api";
 
-import type { TravelerForm } from "@/features/booking/components/TravelersForm/TravelersForm";
 import type { PricedFlight } from "@/shared/types/flight";
+import {
+  storedTravelersSchema,
+  travelersFormSchema,
+  type TravelerForm,
+  type TravelersFormValues,
+} from "@/features/booking/validation/traveler.schema";
 
 import { PriceSidebar } from "@/features/booking/components/PriceSidebar/PriceSidebar";
 import BookingLayout from "./BookingLayout";
 
 const SAVED_TRAVELERS_KEY = "booking-lastTravelers";
+
+function parseStoredTravelers(raw: string | null): TravelerForm[] | null {
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+    const result = storedTravelersSchema.safeParse(parsed);
+
+    if (!result.success) {
+      console.error("Invalid saved travelers", result.error.issues);
+      return null;
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error("Failed to parse saved travelers", error);
+    return null;
+  }
+}
 
 export default function BookingPage() {
   console.log("BookingPage render");
@@ -49,7 +75,25 @@ export default function BookingPage() {
   const [bookingLoaded, setBookingLoaded] = useState(false);
   const [passengerCountChanged, setPassengerCountChanged] = useState(false);
 
-  const [travelers, setTravelersLocal] = useState<TravelerForm[]>([]);
+  const form = useForm<TravelersFormValues>({
+    defaultValues: { travelers: [] },
+    resolver: zodResolver(travelersFormSchema),
+  });
+  const {
+    control,
+    handleSubmit: handleFormSubmit,
+    reset,
+    setValue,
+    getValues,
+  } = form;
+  const travelers = (useWatch<TravelersFormValues>({
+    control,
+    name: "travelers",
+  }) ?? []) as TravelerForm[];
+
+  useEffect(() => {
+    setTravelers(travelers);
+  }, [travelers, setTravelers]);
 
   const travelerCounts = useMemo(() => {
     return {
@@ -115,15 +159,16 @@ export default function BookingPage() {
     [searchId, offerId, setFlight, setPricing],
   );
 
-  const handleDeletePassenger = useCallback((passengerId: string) => {
-    setTravelersLocal((prev) => {
-      const passenger = prev.find((p) => p.id === passengerId);
-      if (!passenger) return prev;
+  const handleDeletePassenger = useCallback(
+    (passengerId: string) => {
+      const currentTravelers = getValues("travelers") ?? [];
+      const passenger = currentTravelers.find((p) => p.id === passengerId);
+      if (!passenger) return;
 
-      if (prev[0]?.id === passengerId) return prev;
+      if (currentTravelers[0]?.id === passengerId) return;
 
-      const adults = prev.filter((p) => p.type === "adult");
-      const hasChildrenOrInfants = prev.some(
+      const adults = currentTravelers.filter((p) => p.type === "adult");
+      const hasChildrenOrInfants = currentTravelers.some(
         (p) => p.type === "child" || p.type === "infant",
       );
 
@@ -132,18 +177,15 @@ export default function BookingPage() {
         adults.length === 1 &&
         hasChildrenOrInfants
       ) {
-        return prev;
+        return;
       }
 
-      // фильтруем пассажира
-      const updated = prev.filter((p) => p.id !== passengerId);
-
+      const updated = currentTravelers.filter((p) => p.id !== passengerId);
+      setValue("travelers", updated);
       setPassengerCountChanged(true);
-
-      return updated;
-    });
-  }, []);
-
+    },
+    [getValues, setValue],
+  );
 
   const handleAddPassengers = useCallback(
     (adults: number, children: number, infants: number) => {
@@ -180,7 +222,8 @@ export default function BookingPage() {
       for (let i = 0; i < infants; i++)
         newPassengers.push(createTraveler("infant", i));
 
-      setTravelersLocal((prev) => [...prev, ...newPassengers]);
+      const currentTravelers = getValues("travelers") ?? [];
+      setValue("travelers", [...currentTravelers, ...newPassengers]);
       setPassengerCountChanged(true);
 
       setTimeout(() => {
@@ -190,7 +233,7 @@ export default function BookingPage() {
         });
       }, 100);
     },
-    [],
+    [getValues, setValue],
   );
 
   useEffect(() => {
@@ -213,49 +256,37 @@ export default function BookingPage() {
   ]);
 
   const handleLoadSavedTravelers = useCallback(() => {
-    try {
-      const raw = localStorage.getItem(SAVED_TRAVELERS_KEY);
+    const parsedTravelers = parseStoredTravelers(
+      localStorage.getItem(SAVED_TRAVELERS_KEY),
+    );
 
-      if (!raw) return;
+    if (!parsedTravelers?.length) return;
 
-      const parsed = JSON.parse(raw) as TravelerForm[];
-
-      console.log("LOAD", parsed);
-
-      if (Array.isArray(parsed) && parsed.length) {
-        setTravelersLocal(parsed);
-        setTravelers(parsed);
-      }
-    } catch (error) {
-      console.error("Failed to load saved travelers", error);
-    }
-  }, [setTravelers]);
+    reset({ travelers: parsedTravelers });
+    setTravelers(parsedTravelers);
+  }, [reset, setTravelers]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(SAVED_TRAVELERS_KEY);
+    const parsedTravelers = parseStoredTravelers(
+      localStorage.getItem(SAVED_TRAVELERS_KEY),
+    );
 
-      if (!raw) {
-        setInitialized(true);
-        return;
-      }
-
-      const parsed = JSON.parse(raw) as TravelerForm[];
-
-      const hasRealData = parsed.some(
-        (t) => t.firstName || t.lastName || t.passportNumber || t.email,
-      );
-
-      if (Array.isArray(parsed) && parsed.length && hasRealData) {
-        setTravelersLocal(parsed);
-        setTravelers(parsed);
-      }
-    } catch (error) {
-      console.error("Failed to restore travelers", error);
-    } finally {
+    if (!parsedTravelers?.length) {
       setInitialized(true);
+      return;
     }
-  }, [setTravelers]);
+
+    const hasRealData = parsedTravelers.some(
+      (t) => t.firstName || t.lastName || t.passportNumber || t.email,
+    );
+
+    if (hasRealData) {
+      reset({ travelers: parsedTravelers });
+      setTravelers(parsedTravelers);
+    }
+
+    setInitialized(true);
+  }, [reset, setTravelers]);
 
   useEffect(() => {
     if (!initialized) return;
@@ -272,7 +303,6 @@ export default function BookingPage() {
       console.error("Failed to save travelers", error);
     }
   }, [travelers, initialized]);
-
 
   useEffect(() => {
     if (!bookingId) {
@@ -306,8 +336,11 @@ export default function BookingPage() {
 
         console.log("BOOKING:", booking);
 
-        const travelerPricings =
-          booking.snapshot.flightOffers?.[0]?.travelerPricings ?? [];
+        const offer = booking.snapshot.offer;
+
+        const travelerPricings = offer?.travelerPricings ?? [];
+
+        console.log("travelerPricings", travelerPricings);
 
         if (!travelerPricings.length) {
           return;
@@ -330,10 +363,12 @@ export default function BookingPage() {
           return createTravelerForm("adult");
         });
 
-        setTravelersLocal(mappedTravelers);
+        reset({ travelers: mappedTravelers });
         setTravelers(mappedTravelers);
 
-        const offer = booking.snapshot.flightOffers?.[0];
+        if (!offer) {
+          throw new Error("Flight offer not found");
+        }
 
         if (!offer) {
           throw new Error("Flight offer not found");
@@ -397,38 +432,11 @@ export default function BookingPage() {
     if (bookingId) {
       loadBooking();
     }
-  }, [bookingId, setFlight, setPricing, router]);
+  }, [bookingId, reset, setFlight, setPricing, router]);
 
-  const handleSubmit = async (travelers: TravelerForm[]) => {
+  const handleSubmit = handleFormSubmit(async (values) => {
+    const travelers = values.travelers ?? [];
     setError(null);
-
-    if (!travelers.length) {
-      setError("Добавьте хотя бы одного пассажира");
-      return;
-    }
-
-    const hasEmpty = travelers.some((t, index) => {
-      const base =
-        !t.firstName ||
-        !t.lastName ||
-        !t.dateOfBirth ||
-        !t.passportNumber ||
-        !t.passportIssuanceDate ||
-        !t.passportExpiry ||
-        !t.birthPlace ||
-        !t.nationality;
-
-      if (index === 0) {
-        return base || !t.email || !t.phoneCountryCode || !t.phoneNumber;
-      }
-
-      return base;
-    });
-
-    if (hasEmpty) {
-      setError("Заполните все обязательные поля пассажиров");
-      return;
-    }
 
     setIsLoading(true);
 
@@ -443,71 +451,74 @@ export default function BookingPage() {
       };
 
       setTravelers(res.travelers);
+      reset({ travelers: res.travelers });
       router.push(`/booking/${bookingId}/seats`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка");
     } finally {
       setIsLoading(false);
     }
-  };
+  });
+
   const existingAdults = travelers.filter((t) => t.type === "adult").length;
 
   return (
-    <BookingLayout
-      sidebar={
-        <PriceSidebar
-          onContinue={() => handleSubmit(travelers)}
-          disabled={isLoading}
-          isLoading={isLoading}
+    <FormProvider {...form}>
+      <BookingLayout
+        sidebar={
+          <PriceSidebar
+            onContinue={handleSubmit}
+            disabled={isLoading}
+            isLoading={isLoading}
+          />
+        }
+      >
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 lg:p-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+            Оформление бронирования
+          </h1>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
+              ⚠️ {error}
+            </div>
+          )}
+
+          <TravelersForm
+            travelers={travelers}
+            onDeletePassenger={handleDeletePassenger}
+          />
+
+          <button
+            onClick={() => setPassengerModalOpen(true)}
+            className="mt-6 w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          >
+            Добавить пассажиров
+          </button>
+
+          <button
+            type="button"
+            onClick={handleLoadSavedTravelers}
+            className="mt-4 w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          >
+            Загрузить сохранённые данные пассажиров
+          </button>
+
+          {isLoading && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mt-6">
+              ⏳ {loadingMessage}
+            </div>
+          )}
+        </div>
+
+        <PassengerModal
+          key={isPassengerModalOpen ? "open" : "closed"}
+          isOpen={isPassengerModalOpen}
+          onClose={() => setPassengerModalOpen(false)}
+          onConfirm={handleAddPassengers}
+          existingAdults={existingAdults}
         />
-      }
-    >
-      <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 lg:p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          Оформление бронирования
-        </h1>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-6">
-            ⚠️ {error}
-          </div>
-        )}
-
-        <TravelersForm
-          travelers={travelers}
-          setTravelers={setTravelersLocal}
-          onDeletePassenger={handleDeletePassenger}
-        />
-
-        <button
-          onClick={() => setPassengerModalOpen(true)}
-          className="mt-6 w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
-        >
-          Добавить пассажиров
-        </button>
-
-        <button
-          type="button"
-          onClick={handleLoadSavedTravelers}
-          className="mt-4 w-full md:w-auto flex items-center justify-center gap-2 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-        >
-          Загрузить сохранённые данные пассажиров
-        </button>
-
-        {isLoading && (
-          <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg mt-6">
-            ⏳ {loadingMessage}
-          </div>
-        )}
-      </div>
-
-      <PassengerModal
-        key={isPassengerModalOpen ? "open" : "closed"}
-        isOpen={isPassengerModalOpen}
-        onClose={() => setPassengerModalOpen(false)}
-        onConfirm={handleAddPassengers}
-        existingAdults={existingAdults}
-      />
-    </BookingLayout>
+      </BookingLayout>
+    </FormProvider>
   );
 }
