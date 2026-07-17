@@ -81,10 +81,52 @@ export default function PaymentSuccessClient({ transactionId }: Props) {
     };
   }, [transactionId]);
 
-  const segment = useMemo(() => {
-    return booking?.snapshot?.flightOffers?.[0]?.itineraries?.[0]
-      ?.segments?.[0];
+  const snapshot = useMemo(() => {
+    if (!booking?.snapshot) return null;
+
+    if (typeof booking.snapshot === "string") {
+      try {
+        return JSON.parse(booking.snapshot);
+      } catch {
+        return null;
+      }
+    }
+
+    return booking.snapshot;
   }, [booking]);
+
+  const flightOffer = useMemo(() => {
+    if (!snapshot) return null;
+
+    if (snapshot.offer) {
+      return snapshot.offer;
+    }
+
+    const flightOffers = Array.isArray(snapshot.flightOffers)
+      ? snapshot.flightOffers
+      : [];
+
+    return flightOffers[0] ?? null;
+  }, [snapshot]);
+
+  const itinerary = useMemo(() => {
+    return flightOffer?.itineraries?.[0] ?? null;
+  }, [flightOffer]);
+
+  const segment = useMemo(() => {
+    return itinerary?.segments?.[0] ?? null;
+  }, [itinerary]);
+
+  const cabin = useMemo(() => {
+    const travelerPricing = flightOffer?.travelerPricings?.[0];
+    const fareDetails = travelerPricing?.fareDetailsBySegment?.[0];
+
+    return (
+      fareDetails?.cabin ??
+      snapshot?.pricing?.travelers?.[0]?.fareDetailsBySegment?.[0]?.cabin ??
+      null
+    );
+  }, [flightOffer, snapshot]);
 
   const travelers = useMemo(() => {
     return booking?.travelers ?? [];
@@ -217,13 +259,7 @@ export default function PaymentSuccessClient({ transactionId }: Props) {
                       {segment?.number}
                     </div>
 
-                    <div className={styles.airlineClass}>
-                      {
-                        booking?.snapshot?.flightOffers?.[0]
-                          ?.travelerPricings?.[0]?.fareDetailsBySegment?.[0]
-                          ?.cabin
-                      }
-                    </div>
+                    <div className={styles.airlineClass}>{cabin ?? "—"}</div>
                   </div>
                 </div>
 
