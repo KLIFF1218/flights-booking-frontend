@@ -27,19 +27,61 @@ import BookingLayout from "./BookingLayout";
 
 const SAVED_TRAVELERS_KEY = "booking-lastTravelers";
 
+function isMeaningfulTraveler(value: unknown): value is TravelerForm {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const meaningfulFields = [
+    "firstName",
+    "lastName",
+    "email",
+    "phoneCountryCode",
+    "phoneNumber",
+    "passportNumber",
+    "passportIssuanceDate",
+    "passportExpiry",
+    "dateOfBirth",
+    "birthPlace",
+  ];
+
+  const hasMeaningfulData = meaningfulFields.some((field) => {
+    const fieldValue = candidate[field];
+    return typeof fieldValue === "string" && fieldValue.trim().length > 0;
+  });
+
+  if (!hasMeaningfulData) {
+    return false;
+  }
+
+  return storedTravelersSchema.safeParse([candidate]).success;
+}
+
 function parseStoredTravelers(raw: string | null): TravelerForm[] | null {
   if (!raw) return null;
 
   try {
     const parsed = JSON.parse(raw);
-    const result = storedTravelersSchema.safeParse(parsed);
 
-    if (!result.success) {
-      console.error("Invalid saved travelers", result.error.issues);
+    if (!Array.isArray(parsed)) {
+      console.warn("Saved travelers payload is not an array");
       return null;
     }
 
-    return result.data;
+    const validTravelers = parsed.filter(isMeaningfulTraveler);
+
+    if (!validTravelers.length) {
+      try {
+        localStorage.removeItem(SAVED_TRAVELERS_KEY);
+      } catch (error) {
+        console.error("Failed to clear invalid saved travelers", error);
+      }
+
+      return null;
+    }
+
+    return validTravelers;
   } catch (error) {
     console.error("Failed to parse saved travelers", error);
     return null;
@@ -291,11 +333,12 @@ export default function BookingPage() {
   useEffect(() => {
     if (!initialized) return;
 
-    const hasRealData = travelers.some(
-      (t) => t.firstName || t.lastName || t.passportNumber || t.email,
-    );
+    if (!travelers.length) return;
 
-    if (!hasRealData) return;
+    const formValidationResult = travelersFormSchema.safeParse({ travelers });
+    if (!formValidationResult.success) {
+      return;
+    }
 
     try {
       localStorage.setItem(SAVED_TRAVELERS_KEY, JSON.stringify(travelers));
@@ -444,7 +487,11 @@ export default function BookingPage() {
 
     try {
       setTravelers(travelers);
-      localStorage.setItem(SAVED_TRAVELERS_KEY, JSON.stringify(travelers));
+
+      const formValidationResult = travelersFormSchema.safeParse({ travelers });
+      if (formValidationResult.success) {
+        localStorage.setItem(SAVED_TRAVELERS_KEY, JSON.stringify(travelers));
+      }
 
       const res = (await confirmTravelers(bookingId, travelers)) as unknown as {
         travelers: TravelerForm[];
