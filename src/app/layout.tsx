@@ -1,9 +1,11 @@
 import '@/app/globals.css';
 
 import { AuthInitializer } from "@/components/AuthInitializer";
+import { AuthCookieBootstrap } from "@/components/AuthCookieBootstrap";
 import { CurrencyInitializer } from "@/components/CurrencyInitializer";
 import { ThemeInitializer } from "@/components/ThemeInitializer";
-import { Header } from "@/shared/ui/header/Header";
+import { SiteShell } from "@/components/SiteShell";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 export default function RootLayout({
   children,
@@ -11,15 +13,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
+    <html lang="en">
       <body>
-        <AuthInitializer />
-        <CurrencyInitializer />
-        <ThemeInitializer />
+        <QueryProvider>
+          <AuthCookieBootstrap />
+          <AuthInitializer />
+          <CurrencyInitializer />
+          <ThemeInitializer />
 
-        <Header />
-
-        <main>{children}</main>
+          <SiteShell>{children}</SiteShell>
+        </QueryProvider>
       </body>
     </html>
   );
