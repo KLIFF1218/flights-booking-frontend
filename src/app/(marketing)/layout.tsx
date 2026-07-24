@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "CheapTickets",
-  description: "Поиск дешёвых авиабилетов и отелей",
+  title: "MaxAirline",
+  description: "Search for cheap flights and hotels",
 };
 
-export default function RootLayout({
+export default function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <>
-      <main>{children}</main>
-    </>
-  );
+  return children;
 }
