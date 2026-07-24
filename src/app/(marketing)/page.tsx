@@ -1,4 +1,3 @@
-"use client";
 import { PopularDestinations } from "@/components/PopularDestinations";
 import { Footer } from "@/components/Footer";
 import { Newsletter } from "@/components/Newsletter";
@@ -17,9 +16,8 @@ export default function HomePage() {
       <HowItWorks />
       <Testimonials />
       <AirlinePartners />
-      
       <Newsletter />
-      <Footer />{" "}
+      <Footer />
     </>
   );
 }
