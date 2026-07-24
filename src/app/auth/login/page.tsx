@@ -1,11 +1,10 @@
-"use client";
-
-import { VkLoginButton } from "@/components/Auth/VK/VkLoginButton";
+import { Suspense } from "react";
+import { LoginPageClient } from "./LoginPage.client";
 
 export default function LoginPage() {
-
   return (
-    <VkLoginButton />
+    <Suspense fallback={<div className="p-8 text-center">Loading…</div>}>
+      <LoginPageClient />
+    </Suspense>
   );
 }
-
