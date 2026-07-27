@@ -16,21 +16,22 @@ type Props = {
   placeholder: string;
 };
 
-export function AirportCombobox({ value, onChange, placeholder }: Props) {
+export function AirportCombobox({ onChange, placeholder }: Props) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Airport[]>([]);
+  const [fetchedResults, setFetchedResults] = useState<Airport[]>([]);
   const [open, setOpen] = useState(false);
+
+  const results = query.length < 2 ? [] : fetchedResults;
 
   useEffect(() => {
     if (query.length < 2) {
-      setResults([]);
       return;
     }
 
     const timeout = setTimeout(async () => {
       try {
-        const res = await apiFetch(`/airports/search?q=${query}`);
-        setResults(res.data);
+        const res = await apiFetch<{ data: Airport[] }>(`/airports/search?q=${query}`);
+        setFetchedResults(res.data);
         setOpen(true);
       } catch (e) {
         console.error(e);

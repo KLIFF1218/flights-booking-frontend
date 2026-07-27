@@ -2,46 +2,55 @@
 
 import { useEffect } from "react";
 import { useAuthStore } from "@/lib/auth-store";
-import { apiFetch } from "@/shared/api/apiClient";
-
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-}
+import {
+  clearAuthData,
+  getAccessToken,
+  refreshAccessToken,
+} from "@/shared/api/apiClient";
+import { hasAuthSession } from "@/shared/auth/session-cookie";
+import { loadCurrentUser } from "@/features/auth/api/auth.api";
 
 export function AuthInitializer() {
   const {
-    setUser,
     setIsLoading,
     isLoading,
-    user,
     authChecked,
     setAuthChecked,
   } = useAuthStore();
 
   useEffect(() => {
-    if (user || isLoading || authChecked) return;
+    if (isLoading || authChecked) return;
 
     const initializeAuth = async () => {
       setIsLoading(true);
 
       try {
-        
-        const user = await apiFetch<User>("/users/me");
-        console.log("Fetched user profile:", user);
-        setUser(user);
-      } catch (error) {
-        console.warn("Failed to initialize auth:", error);
+        let token = getAccessToken();
+        const hasSessionHint =
+          typeof document !== "undefined" && hasAuthSession(document.cookie);
+        const hasPersistedUser = Boolean(useAuthStore.getState().user);
+
+        // Memory-only access token: restore from HttpOnly refresh cookie when needed.
+        if (!token && (hasSessionHint || hasPersistedUser)) {
+          token = await refreshAccessToken();
+        }
+
+        if (!token) {
+          clearAuthData();
+          return;
+        }
+
+        await loadCurrentUser();
+      } catch {
+        clearAuthData();
       } finally {
         setAuthChecked(true);
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
-  }, [setUser, setIsLoading, user, isLoading, authChecked, setAuthChecked]);
+    void initializeAuth();
+  }, [isLoading, authChecked, setAuthChecked, setIsLoading]);
 
   return null;
 }

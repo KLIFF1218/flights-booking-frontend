@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import {
   popularDestinations,
@@ -9,16 +10,16 @@ import {
 } from "@/shared/data/popular-destinations";
 
 export function PopularDestinations() {
+  const t = useTranslations("home.destinations");
+
   return (
     <section className="bg-white px-4 pb-20 pt-5">
       <div className="container mx-auto max-w-7xl">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-4xl font-bold text-gray-900 lg:text-5xl">
-            Popular destinations
+            {t("title")}
           </h2>
-          <p className="text-xl text-gray-600">
-            Choose a destination and jump straight into real flight search.
-          </p>
+          <p className="text-xl text-gray-600">{t("subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -51,7 +52,7 @@ export function PopularDestinations() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <div className="mb-1 text-xs text-white/80">From</div>
+                    <div className="mb-1 text-xs text-white/80">{t("from")}</div>
                     <div className="text-xl font-semibold">
                       {destination.origin}
                     </div>
@@ -59,11 +60,11 @@ export function PopularDestinations() {
                 </div>
 
                 <p className="mt-3 text-sm text-white/80">
-                  {destination.description}
+                  {destination.origin} → {destination.destination}
                 </p>
 
                 <div className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-white/20 px-4 py-3 backdrop-blur-sm transition group-hover:bg-white/30">
-                  <span>View flights</span>
+                  <span>{t("viewFlights")}</span>
                   <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
                 </div>
               </div>

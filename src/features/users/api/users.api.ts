@@ -1,8 +1,8 @@
-import { User } from "@/data/mockData";
+import type { AdminUser } from "@/shared/types/user";
 import { apiFetch } from "@/shared/api/apiClient";
 
 interface AdminUsersResponse {
-  data: User[];
+  data: AdminUser[];
   meta: {
     total: number;
     page: number;

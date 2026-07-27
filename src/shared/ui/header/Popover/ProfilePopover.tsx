@@ -1,6 +1,7 @@
+"use client";
+
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import * as Popover from "@radix-ui/react-popover";
+import { useTranslations } from "next-intl";
 import {
   User2Icon,
   LogOut,
@@ -9,13 +10,42 @@ import {
   Package,
   FileText,
 } from "lucide-react";
+import * as Popover from "@radix-ui/react-popover";
 
 import styles from "./Profile-popover.module.css";
 import { LoginDialog } from "@/modals/Login/LoginDialog";
 import { useAuth } from "@/providers/auth-provider";
+import { useRouter } from "@/i18n/navigation";
+import type { User } from "@/lib/auth-store";
+
+const accountMenu = [
+  {
+    icon: Settings,
+    labelKey: "settings" as const,
+    path: "/my/settings",
+  },
+  {
+    icon: Bell,
+    labelKey: "notifications" as const,
+    path: "/my/notifications",
+  },
+  {
+    icon: Package,
+    labelKey: "orders" as const,
+    path: "/my/orders",
+  },
+  {
+    icon: FileText,
+    labelKey: "documents" as const,
+    path: "/my/documents",
+  },
+] as const;
 
 export const ProfilePopover = () => {
   const router = useRouter();
+  const tNav = useTranslations("nav");
+  const tCommon = useTranslations("common");
+  const tHeader = useTranslations("header");
 
   const [open, setOpen] = React.useState(false);
   const [loginOpen, setLoginOpen] = React.useState(false);
@@ -23,9 +53,15 @@ export const ProfilePopover = () => {
 
   const { user, isAuthorized, logout } = useAuth();
 
-  const navigate = (url: string) => {
-    router.push(url);
+  const handleMenuItemClick = (path: string) => {
     setOpen(false);
+
+    if (isAuthorized) {
+      router.push(path);
+      return;
+    }
+
+    setLoginOpen(true);
   };
 
   const handleLogout = async () => {
@@ -38,56 +74,11 @@ export const ProfilePopover = () => {
     }
   };
 
-  const authMenu = [
-    {
-      icon: <Settings size={18} />,
-      label: "Настройки",
-      path: "/my/settings",
-    },
-    {
-      icon: <Bell size={18} />,
-      label: "Уведомления",
-      path: "/my/notifications",
-    },
-    {
-      icon: <Package size={18} />,
-      label: "Мои заказы",
-      path: "/my/orders",
-    },
-    {
-      icon: <FileText size={18} />,
-      label: "Документы",
-      path: "/my/documents",
-    },
-  ];
-
-  const guestMenu = [
-    {
-      icon: <Settings size={18} />,
-      label: "Настройки",
-    },
-    {
-      icon: <Bell size={18} />,
-      label: "Уведомления",
-    },
-    {
-      icon: <Package size={18} />,
-      label: "Мои заказы",
-      path: "/my/orders",
-    },
-    {
-      icon: <FileText size={18} />,
-      label: "Документы",
-    },
-  ];
-
-  const menu = isAuthorized ? authMenu : guestMenu;
-
   return (
     <>
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger asChild>
-          <button className={styles.trigger}>
+          <button className={styles.trigger} aria-label={tHeader("accountMenu")}>
             <User2Icon />
           </button>
         </Popover.Trigger>
@@ -102,15 +93,19 @@ export const ProfilePopover = () => {
             <div className={styles.menu}>
               {isAuthorized && <UserInfo user={user} />}
 
-              {menu.map((item) => (
-                <MenuItem
-                  key={item.label}
-                  icon={item.icon}
-                  onClick={() => item.path && navigate(item.path)}
-                >
-                  {item.label}
-                </MenuItem>
-              ))}
+              {accountMenu.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <MenuItem
+                    key={item.path}
+                    icon={<Icon size={18} />}
+                    onClick={() => handleMenuItemClick(item.path)}
+                  >
+                    {tNav(item.labelKey)}
+                  </MenuItem>
+                );
+              })}
 
               {isAuthorized ? (
                 <button
@@ -119,14 +114,19 @@ export const ProfilePopover = () => {
                   disabled={isLoggingOut}
                 >
                   <LogOut size={18} />
-                  <span>{isLoggingOut ? "Выход..." : "Выйти"}</span>
+                  <span>
+                    {isLoggingOut ? tCommon("signingOut") : tCommon("signOut")}
+                  </span>
                 </button>
               ) : (
                 <button
                   className={styles.loginButton}
-                  onClick={() => setLoginOpen(true)}
+                  onClick={() => {
+                    setOpen(false);
+                    setLoginOpen(true);
+                  }}
                 >
-                  Войти
+                  {tCommon("signIn")}
                 </button>
               )}
             </div>
@@ -139,7 +139,7 @@ export const ProfilePopover = () => {
   );
 };
 
-const UserInfo = ({ user }: any) => (
+const UserInfo = ({ user }: { user: User | null }) => (
   <div className={styles.userInfo}>
     <p className={styles.userName}>{user?.firstName || user?.email}</p>
     <p className={styles.userEmail}>{user?.email}</p>
@@ -155,7 +155,7 @@ const MenuItem = ({
   children: React.ReactNode;
   onClick?: () => void;
 }) => (
-  <button className={styles.menuItem} onClick={onClick}>
+  <button className={styles.menuItem} onClick={onClick} type="button">
     <span className={styles.iconWrap}>{icon}</span>
     <span>{children}</span>
   </button>

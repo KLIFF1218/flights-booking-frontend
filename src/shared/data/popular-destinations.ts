@@ -82,6 +82,7 @@ export function buildSearchUrl(destination: PopularDestination) {
     adults: "1",
     children: "0",
     infants: "0",
+    seatedInfants: "0",
     travelClass: "ECONOMY",
   });
 

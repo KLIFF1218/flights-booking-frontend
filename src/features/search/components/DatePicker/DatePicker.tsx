@@ -3,7 +3,8 @@
 import * as Popover from "@radix-ui/react-popover";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS, ru } from "date-fns/locale";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 import { X } from "lucide-react";
 
@@ -18,6 +19,8 @@ type Props = {
 };
 
 export function DatePicker({ value, onChange, fromDate, placeholder }: Props) {
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ru" ? ru : enUS;
   const [open, setOpen] = useState(false);
 
   const today = new Date();
@@ -31,7 +34,7 @@ export function DatePicker({ value, onChange, fromDate, placeholder }: Props) {
           className={`${styles.trigger} ${value ? styles.filled : ""}`}
         >
           <span className={styles.label}>
-            {value ? format(value, "d MMMM, EEE", { locale: ru }) : placeholder}
+            {value ? format(value, "d MMMM, EEE", { locale: dateFnsLocale }) : placeholder}
           </span>
 
           {value && (
@@ -54,7 +57,7 @@ export function DatePicker({ value, onChange, fromDate, placeholder }: Props) {
         <DayPicker
           mode="single"
           selected={value}
-          locale={ru}
+          locale={dateFnsLocale}
           disabled={{
             before: fromDate ?? today,
           }}

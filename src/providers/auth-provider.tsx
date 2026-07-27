@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback } from "react";
+import { useRouter } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/auth-store";
 import { clearAuthData, apiFetch } from "@/shared/api/apiClient";
 
 export function useAuth() {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
   const setUser = useAuthStore((state) => state.setUser);
-  const logout = useAuthStore((state) => state.logout);
 
   const handleLogout = useCallback(async () => {
     try {
@@ -19,9 +20,9 @@ export function useAuth() {
       console.error("Logout failed:", error);
     } finally {
       clearAuthData();
-      logout();
+      router.replace("/");
     }
-  }, [logout]);
+  }, [router]);
 
   return {
     user,

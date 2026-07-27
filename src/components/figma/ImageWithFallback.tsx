@@ -1,3 +1,6 @@
+"use client";
+
+/* eslint-disable @next/next/no-img-element -- native img is required for onError fallback behavior */
 import React, { useState } from 'react'
 
 const ERROR_IMG_SRC =

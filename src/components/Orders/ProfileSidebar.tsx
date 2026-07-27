@@ -1,30 +1,36 @@
 "use client";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Settings, Bell, FileText, Package } from "lucide-react";
+
+import { useRouter } from "@/i18n/navigation";
+import { stripLeadingLocale } from "@/i18n/path";
 
 export function ProfileSidebar() {
   const router = useRouter();
   const pathname = usePathname();
+  const pathWithoutLocale = stripLeadingLocale(pathname ?? "/");
+  const t = useTranslations("nav");
 
   const items = [
     {
-      label: "Настройки",
+      label: t("settings"),
       icon: Settings,
       href: "/my/settings",
     },
     {
-      label: "Уведомления",
+      label: t("notifications"),
       icon: Bell,
       href: "/my/notifications",
     },
     {
-      label: "Мои заказы",
+      label: t("orders"),
       icon: Package,
       href: "/my/orders",
     },
     {
-      label: "Документы",
+      label: t("documents"),
       icon: FileText,
       href: "/my/documents",
     },
@@ -35,7 +41,12 @@ export function ProfileSidebar() {
       <nav className="flex lg:flex-col gap-1 sm:gap-2 overflow-x-auto lg:overflow-x-visible">
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive =
+            pathWithoutLocale === item.href ||
+            (item.href === "/my/orders" &&
+              pathWithoutLocale.startsWith("/my/orders")) ||
+            (item.href === "/my/notifications" &&
+              pathWithoutLocale.startsWith("/my/notifications"));
 
           return (
             <button

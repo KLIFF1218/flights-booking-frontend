@@ -2,6 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { Plane } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface PriceUpdateModalProps {
   open: boolean;
@@ -14,6 +15,8 @@ export function PriceUpdateModal({
   onClose,
   onRefresh,
 }: PriceUpdateModalProps) {
+  const t = useTranslations("results.priceModal");
+
   return (
     <Dialog.Root open={open}>
       <Dialog.Portal>
@@ -50,7 +53,7 @@ export function PriceUpdateModal({
               leading-tight text-gray-900
             "
           >
-            Обновите поиск — цены могли измениться
+            {t("title")}
           </Dialog.Title>
 
           <Dialog.Description
@@ -60,8 +63,7 @@ export function PriceUpdateModal({
               text-gray-600
             "
           >
-            Авиакомпании меняют цены несколько раз в день. Иногда они становятся
-            ниже.
+            {t("description")}
           </Dialog.Description>
 
           <div className="flex gap-3">
@@ -77,7 +79,7 @@ export function PriceUpdateModal({
                 hover:bg-gray-100
               "
             >
-              Позже
+              {t("later")}
             </button>
 
             <button
@@ -95,7 +97,7 @@ export function PriceUpdateModal({
                 hover:to-indigo-700
               "
             >
-              Обновить
+              {t("refresh")}
             </button>
           </div>
         </Dialog.Content>

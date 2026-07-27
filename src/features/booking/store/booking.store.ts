@@ -1,9 +1,12 @@
 "use client";
 
 import { create } from "zustand";
-import type { TravelerForm } from "@/features/booking/components/TravelersForm/TravelersForm";
+import type { TravelerForm } from "@/features/booking/validation/traveler.schema";
 import type { SeatMapUi } from "@/features/booking/api/booking.api";
 import type { PricedFlight } from "@/shared/types/flight";
+import type { PaymentProviderCode } from "@/features/payments/types/payment-provider";
+import { paymentProviderForCurrency } from "@/features/payments/utils/payment-provider-policy";
+import { getCurrency } from "@/shared/utils/currency";
 
 export type SeatSelection = {
   travelerId: string;
@@ -12,11 +15,35 @@ export type SeatSelection = {
 };
 
 export type PricingState = {
-  baseTotal: number;    
-  seatsTotal: number;    
-  finalTotal: number;    
+  baseTotal: number;
+  taxesTotal: number;
+  feesTotal: number;
+  seatsTotal: number;
+  finalTotal: number;
   currency: string;
+  quoteId?: string;
+  quotedAt?: string;
+  expiresAt?: string;
+  scheduleChanged?: boolean;
+  operationalStatus?: string;
+  delayMinutes?: number;
+  source?: string;
+  pricingMode?: "indicative" | "final";
+  fareBrand?: "LIGHT" | "FLEX";
+  changeable?: boolean;
+  refundable?: boolean;
 };
+
+export function pricingFromFlight(flight: PricedFlight): PricingState {
+  return {
+    baseTotal: flight.price.base ?? 0,
+    taxesTotal: flight.price.taxes ?? 0,
+    feesTotal: flight.price.fees ?? 0,
+    seatsTotal: flight.price.seats ?? 0,
+    finalTotal: flight.price.total ?? 0,
+    currency: flight.price.currency ?? "USD",
+  };
+}
 
 type BookingState = {
   flight: PricedFlight | null;
@@ -30,12 +57,15 @@ type BookingState = {
 
   pricing: PricingState | null;
 
-  setFlight: (flight: PricedFlight) => void;
+  paymentProvider: PaymentProviderCode;
+
+  setFlight: (flight: PricedFlight | null) => void;
   setTravelers: (travelers: TravelerForm[]) => void;
   setOrder: (args: { searchId: string; offerId: string }) => void;
-  setSeatMaps: (seatMaps: SeatMapUi[] | null) => void;
+  setSeatMaps: (seatMaps: SeatMapUi[] | null | undefined) => void;
   setSeats: (seats: SeatSelection[]) => void;
   setPricing: (pricing: PricingState | null) => void;
+  setPaymentProvider: (paymentProvider: PaymentProviderCode) => void;
 
   reset: () => void;
 };
@@ -48,29 +78,21 @@ export const useBookingStore = create<BookingState>((set) => ({
   seatMaps: [],
   seats: [],
   pricing: null,
+  paymentProvider: paymentProviderForCurrency(getCurrency()),
 
-  setFlight: (flight) =>
-  set({
-    flight,
-    pricing: flight?.price
-      ? {
-          baseTotal: flight.price.base ?? 0,
-          seatsTotal: flight.price.seats ?? 0,
-          finalTotal: flight.price.total ?? 0,
-          currency: flight.price.currency ?? "USD",
-        }
-      : null,
-  }),
+  setFlight: (flight) => set({ flight }),
 
   setTravelers: (travelers) => set({ travelers }),
 
   setOrder: ({ searchId, offerId }) => set({ searchId, offerId }),
 
-  setSeatMaps: (seatMaps) => set({ seatMaps }),
+  setSeatMaps: (seatMaps) => set({ seatMaps: seatMaps ?? [] }),
 
   setSeats: (seats) => set({ seats }),
 
   setPricing: (pricing) => set({ pricing }),
+
+  setPaymentProvider: (paymentProvider) => set({ paymentProvider }),
 
   reset: () =>
   set({
@@ -81,5 +103,6 @@ export const useBookingStore = create<BookingState>((set) => ({
     seatMaps: [],
     seats: [],
     pricing: null,
+    paymentProvider: paymentProviderForCurrency(getCurrency()),
   }),
 }));
