@@ -1,0 +1,47 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.option {
+  min-width: 36px;
+  padding: 0.4rem 0.55rem;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.15s ease;
+}
+
+.option:hover:not(.optionActive) {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.option:active {
+  transform: scale(0.96);
+}
+
+.optionActive {
+  background: #fff;
+  color: #1e40af;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.optionActive:hover {
+  background: #fff;
+  color: #1e40af;
+}

@@ -1,0 +1,42 @@
+# MaxAirline frontend (production)
+#
+# NEXT_PUBLIC_* are baked in at build time — set them in `.env` or the shell before build.
+#
+#   docker compose -f docker-compose.production.yml up -d --build
+#   open http://localhost
+
+x-frontend-healthcheck: &frontend-healthcheck
+  test:
+    [
+      'CMD',
+      'node',
+      '-e',
+      "require('http').get('http://localhost:3000/', (res) => { process.exit(res.statusCode < 500 ? 0 : 1) }).on('error', () => process.exit(1))",
+    ]
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
+        NEXT_PUBLIC_VK_APP_ID: ${NEXT_PUBLIC_VK_APP_ID:-}
+        NEXT_PUBLIC_VK_REDIRECT_URL: ${NEXT_PUBLIC_VK_REDIRECT_URL:-http://localhost}
+    image: max-airline-frontend:${APP_VERSION:-latest}
+    container_name: max-airline-frontend-prod
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    ports:
+      - '127.0.0.1:80:3000'
+    restart: unless-stopped
+    healthcheck: *frontend-healthcheck
+    security_opt:
+      - no-new-privileges:true
