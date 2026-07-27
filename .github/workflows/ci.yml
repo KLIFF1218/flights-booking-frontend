@@ -3,10 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - dev
   pull_request:
     branches:
-      - main
+      - dev
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -20,7 +20,7 @@ jobs:
     env:
       NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
       NEXT_PUBLIC_VK_APP_ID: ci-placeholder
-      NEXT_PUBLIC_VK_REDIRECT_URL: http://localhost:3111
+      NEXT_PUBLIC_VK_REDIRECT_URL: http://localhost
 
     steps:
       - name: Checkout repository
@@ -29,7 +29,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

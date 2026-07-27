@@ -7,7 +7,7 @@ on:
     types:
       - completed
     branches:
-      - main
+      - dev
 
 jobs:
   deploy:
@@ -24,11 +24,11 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -euo pipefail
-            cd "${{ secrets.FRONTEND_DEPLOY_PATH || '/var/www/max-airline-frontend' }}"
+            cd /var/www/max-airline-frontend
 
             echo "> Pulling latest code..."
-            git fetch origin main
-            git reset --hard origin/main
+            git fetch origin dev
+            git reset --hard origin/dev
 
             echo "> Installing dependencies..."
             corepack enable
