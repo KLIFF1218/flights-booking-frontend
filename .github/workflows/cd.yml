@@ -7,7 +7,7 @@ on:
     types:
       - completed
     branches:
-      - dev
+      - master
 
 jobs:
   deploy:
@@ -18,33 +18,32 @@ jobs:
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.2
+        env:
+          IMAGE: ghcr.io/kliff1218/flights-booking-frontend:latest
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: IMAGE,GHCR_PULL_TOKEN
           script: |
             set -euo pipefail
             cd /var/www/max-airline-frontend
+            export GITHUB_REPOSITORY=kliff1218/flights-booking-frontend
+            export APP_VERSION=latest
 
-            echo "> Pulling latest code..."
-            git fetch origin dev
-            git reset --hard origin/dev
-
-            echo "> Installing dependencies..."
-            corepack enable
-            pnpm install --frozen-lockfile
-
-            echo "> Building frontend..."
-            export NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}"
-            export NEXT_PUBLIC_VK_APP_ID="${{ secrets.NEXT_PUBLIC_VK_APP_ID }}"
-            export NEXT_PUBLIC_VK_REDIRECT_URL="${{ secrets.NEXT_PUBLIC_VK_REDIRECT_URL }}"
-            pnpm build
-
-            echo "> Restarting process manager..."
-            if command -v pm2 >/dev/null 2>&1; then
-              pm2 restart max-airline-frontend || pm2 start pnpm --name max-airline-frontend -- start
-            else
-              echo "pm2 is not installed; start the app manually with: pnpm start"
+            if [ -n "${GHCR_PULL_TOKEN:-}" ]; then
+              echo "> Logging in to GHCR..."
+              echo "$GHCR_PULL_TOKEN" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
             fi
+
+            echo "> Pulling ${IMAGE}..."
+            docker pull "${IMAGE}"
+
+            echo "> Restarting frontend container..."
+            docker compose -f docker-compose.production.yml up -d --pull always --remove-orphans
+
+            echo "> Cleaning up old images..."
+            docker image prune -f
 
             echo "> Deployment complete!"

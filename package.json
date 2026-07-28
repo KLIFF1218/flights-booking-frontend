@@ -6,7 +6,8 @@
     "dev": "next dev -H 0.0.0.0 -p 80",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 80",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "engines": {
     "node": ">=22",

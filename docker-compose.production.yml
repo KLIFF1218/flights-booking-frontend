@@ -1,8 +1,9 @@
 # MaxAirline frontend (production)
 #
-# NEXT_PUBLIC_* are baked in at build time — set them in `.env` or the shell before build.
-#
+# Pull pre-built image from GHCR (CD) or build locally:
+#   export GITHUB_REPOSITORY=kliff1218/flights-booking-frontend
 #   docker compose -f docker-compose.production.yml up -d --build
+#
 #   open http://localhost
 
 x-frontend-healthcheck: &frontend-healthcheck
@@ -20,6 +21,8 @@ x-frontend-healthcheck: &frontend-healthcheck
 
 services:
   frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY:-kliff1218/flights-booking-frontend}:${APP_VERSION:-latest}
+    container_name: max-airline-frontend-prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,8 +31,6 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3001/api/v1}
         NEXT_PUBLIC_VK_APP_ID: ${NEXT_PUBLIC_VK_APP_ID:-}
         NEXT_PUBLIC_VK_REDIRECT_URL: ${NEXT_PUBLIC_VK_REDIRECT_URL:-http://localhost}
-    image: max-airline-frontend:${APP_VERSION:-latest}
-    container_name: max-airline-frontend-prod
     environment:
       NODE_ENV: production
       PORT: 3000
