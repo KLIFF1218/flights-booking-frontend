@@ -143,7 +143,7 @@ export function PaymentPendingView({ bookingId }: Props) {
     }
 
     return expiresAt.getTime() <= Date.now();
-  }, [expiresAt, countdown]);
+  }, [expiresAt]);
 
   const handlePay = async () => {
     setIsPaying(true);

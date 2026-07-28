@@ -348,7 +348,15 @@
       "countryRU": "Russia",
       "countryUA": "Ukraine",
       "countryKZ": "Kazakhstan",
-      "countryBY": "Belarus"
+      "countryBY": "Belarus",
+      "placeholderBirthPlace": "MOSCOW",
+      "placeholderFirstName": "IVAN",
+      "placeholderLastName": "IVANOV",
+      "placeholderEmail": "example@email.com",
+      "placeholderPhoneCountryCode": "7",
+      "placeholderPhoneNumber": "9991234567",
+      "placeholderDocumentNumber": "1234567890",
+      "placeholderPassportNumber": "1234 567890"
     },
     "validation": {
       "latinOnly": "Latin letters, spaces, and hyphens only",
@@ -485,6 +493,35 @@
       "preparingPage": "Loading booking details…",
       "title": "Payment canceled",
       "subtitle": "You left the payment page. Your booking is still unpaid — you can continue later."
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "saved": "Saved",
+    "loading": "Loading…",
+    "emptySaved": "No saved documents yet. Add your first one below.",
+    "newDocument": "New document",
+    "clearForm": "Clear form",
+    "citizenship": "Citizenship (code)",
+    "gender": "Gender",
+    "genderMale": "M",
+    "genderFemale": "F",
+    "lastName": "Last name",
+    "firstName": "First name",
+    "dateOfBirth": "Date of birth",
+    "documentNumber": "Document No.",
+    "dateOfIssue": "Date of issue",
+    "expiryDate": "Expiry date",
+    "add": "Add",
+    "saving": "Saving…",
+    "passport": "Passport",
+    "deleteAria": "Delete",
+    "autoSaveTitle": "Save passenger data when purchasing",
+    "autoSaveHint": "This setting applies when placing an order on the website",
+    "errors": {
+      "requiredFields": "Please fill in the required fields: full name, date of birth, and document number.",
+      "passportDates": "Please provide the passport issue and expiry dates.",
+      "saveFailed": "Failed to save the document. Please check the data and try again."
     }
   },
   "orders": {

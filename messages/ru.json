@@ -360,7 +360,15 @@
       "countryRU": "Россия",
       "countryUA": "Украина",
       "countryKZ": "Казахстан",
-      "countryBY": "Беларусь"
+      "countryBY": "Беларусь",
+      "placeholderBirthPlace": "MOSCOW",
+      "placeholderFirstName": "IVAN",
+      "placeholderLastName": "IVANOV",
+      "placeholderEmail": "example@email.com",
+      "placeholderPhoneCountryCode": "7",
+      "placeholderPhoneNumber": "9991234567",
+      "placeholderDocumentNumber": "1234567890",
+      "placeholderPassportNumber": "1234 567890"
     },
     "validation": {
       "latinOnly": "Только латинские буквы, пробелы и дефисы",
@@ -497,6 +505,35 @@
       "preparingPage": "Загружаем данные брони…",
       "title": "Оплата отменена",
       "subtitle": "Вы покинули страницу оплаты. Бронь ещё не оплачена — можно продолжить позже."
+    }
+  },
+  "documents": {
+    "title": "Документы",
+    "saved": "Сохранённые",
+    "loading": "Загрузка…",
+    "emptySaved": "Сохранённых документов ещё нет. Добавьте первый ниже.",
+    "newDocument": "Новый документ",
+    "clearForm": "Очистить форму",
+    "citizenship": "Гражданство (код)",
+    "gender": "Пол",
+    "genderMale": "М",
+    "genderFemale": "Ж",
+    "lastName": "Фамилия",
+    "firstName": "Имя",
+    "dateOfBirth": "Дата рождения",
+    "documentNumber": "Номер документа",
+    "dateOfIssue": "Дата выдачи",
+    "expiryDate": "Срок действия",
+    "add": "Добавить",
+    "saving": "Сохранение…",
+    "passport": "Паспорт",
+    "deleteAria": "Удалить",
+    "autoSaveTitle": "Сохранять данные пассажира при покупке",
+    "autoSaveHint": "Настройка применяется при оформлении заказа на сайте",
+    "errors": {
+      "requiredFields": "Заполните обязательные поля: ФИО, дату рождения и номер документа.",
+      "passportDates": "Укажите дату выдачи и срок действия паспорта.",
+      "saveFailed": "Не удалось сохранить документ. Проверьте данные и попробуйте снова."
     }
   },
   "orders": {

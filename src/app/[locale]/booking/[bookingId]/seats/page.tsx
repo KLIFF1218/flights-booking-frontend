@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import BookingLayout from "../BookingLayout";
 import { PriceSidebar } from "@/features/booking/components/PriceSidebar/PriceSidebar";
 import { Users, Check, AlertCircle } from "lucide-react";
@@ -31,7 +31,7 @@ import {
 import { useBookingStatusGuard } from "@/features/booking/hooks/useBookingStatusGuard";
 import { BookingInactiveView } from "@/features/booking/components/BookingInactiveView/BookingInactiveView";
 import { useSearchCurrency } from "@/features/search/hooks/useSearchCurrency";
-import { getCurrency, toCurrencyCode, setCurrency } from "@/shared/utils/currency";
+import { toCurrencyCode, setCurrency } from "@/shared/utils/currency";
 import {
   currencyForPaymentProvider,
   isPaymentProviderCurrencyCompatible,
@@ -130,7 +130,6 @@ export default function SeatsPage() {
   const router = useRouter();
   const t = useTranslations("booking");
   const tSearch = useTranslations("search");
-  const locale = useLocale();
   const searchCurrency = useSearchCurrency();
   const pricingCurrency = toCurrencyCode(pricing?.currency ?? searchCurrency);
 
@@ -414,7 +413,7 @@ export default function SeatsPage() {
         }
       }
     },
-    [travelers, searchId, offerId, applyPricingQuote],
+    [travelers, searchId, offerId, applyPricingQuote, searchCurrency, t],
   );
 
   const handlePaymentProviderChange = useCallback(

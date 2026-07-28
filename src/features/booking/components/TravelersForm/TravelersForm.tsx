@@ -151,7 +151,7 @@ export function TravelersForm({
                   <input
                     {...register(`travelers.${i}.birthPlace`)}
                     className={inputClass}
-                    placeholder="MOSCOW"
+                    placeholder={t("placeholderBirthPlace")}
                   />
                 </Field>
               ) : null}
@@ -174,7 +174,7 @@ export function TravelersForm({
                 <input
                   {...register(`travelers.${i}.firstName`)}
                   className={inputClass}
-                  placeholder="IVAN"
+                  placeholder={t("placeholderFirstName")}
                 />
               </Field>
 
@@ -182,7 +182,7 @@ export function TravelersForm({
                 <input
                   {...register(`travelers.${i}.lastName`)}
                   className={inputClass}
-                  placeholder="IVANOV"
+                  placeholder={t("placeholderLastName")}
                 />
               </Field>
 
@@ -214,7 +214,7 @@ export function TravelersForm({
                       type="email"
                       {...register(`travelers.${i}.email`)}
                       className={inputClass}
-                      placeholder="example@email.com"
+                      placeholder={t("placeholderEmail")}
                     />
                   </Field>
                 </div>
@@ -236,14 +236,14 @@ export function TravelersForm({
                           maxLength={3}
                           {...register(`travelers.${i}.phoneCountryCode`)}
                           className="w-full focus:outline-none"
-                          placeholder="7"
+                          placeholder={t("placeholderPhoneCountryCode")}
                         />
                       </div>
 
                       <input
                         {...register(`travelers.${i}.phoneNumber`)}
                         className={inputClass}
-                        placeholder="9991234567"
+                        placeholder={t("placeholderPhoneNumber")}
                       />
                     </div>
                   </Field>
@@ -259,7 +259,11 @@ export function TravelersForm({
                     <input
                       {...register(`travelers.${i}.passportNumber`)}
                       className={inputClass}
-                      placeholder={isInfant ? "1234567890" : "1234 567890"}
+                      placeholder={
+                        isInfant
+                          ? t("placeholderDocumentNumber")
+                          : t("placeholderPassportNumber")
+                      }
                     />
                   </Field>
 
