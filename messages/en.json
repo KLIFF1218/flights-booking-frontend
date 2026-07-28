@@ -680,11 +680,7 @@
   "home": {
     "hero": {
       "title": "Find the perfect flight",
-      "titleAccent": "at the best price",
-      "statAirlines": "Airlines",
-      "statDestinations": "Destinations",
-      "statTravelers": "Travelers",
-      "statSavings": "Average savings"
+      "titleAccent": "at the best price"
     },
     "destinations": {
       "title": "Popular destinations",
@@ -693,16 +689,16 @@
       "viewFlights": "View flights"
     },
     "whyChooseUs": {
-      "title": "Why Choose MaxAirline?",
-      "subtitle": "The smartest way to book your flights",
-      "cheapestTitle": "Cheapest Prices",
-      "cheapestDesc": "We guarantee the lowest prices or we'll refund the difference. Save up to 60% on every booking.",
-      "fastTitle": "Lightning Fast Search",
-      "fastDesc": "Search hundreds of airlines in seconds. Our advanced algorithm finds you the best deals instantly.",
-      "trustedTitle": "Trusted Airlines",
-      "trustedDesc": "Partner with 500+ trusted airlines worldwide. Your safety and comfort are our top priorities.",
-      "supportTitle": "24/7 Support",
-      "supportDesc": "Our expert team is always here to help. Get assistance anytime, anywhere via chat, email, or phone."
+      "title": "Why MaxAirline?",
+      "subtitle": "A demo platform with a complete booking flow",
+      "cheapestTitle": "Clear pricing",
+      "cheapestDesc": "See the fare breakdown before payment, including seats and fees.",
+      "fastTitle": "Fast search",
+      "fastDesc": "Search by route, dates, passengers, and travel class in one place.",
+      "trustedTitle": "End-to-end booking",
+      "trustedDesc": "From search to seat selection, payment, and ticket — powered by a real API.",
+      "supportTitle": "Live notifications",
+      "supportDesc": "Order and flight updates appear in your account as events happen."
     },
     "howItWorks": {
       "title": "How It Works",
@@ -714,62 +710,9 @@
       "bookTitle": "Book",
       "bookDesc": "Secure your ticket in just a few clicks. Get instant confirmation and digital boarding pass."
     },
-    "testimonials": {
-      "title": "Loved by Travelers",
-      "subtitle": "Join millions of happy customers worldwide",
-      "text1": "I saved over $500 on my last trip to Europe! MaxAirline found me deals I couldn't find anywhere else. Absolutely recommend it!",
-      "name1": "Sarah Johnson",
-      "role1": "Frequent Traveler",
-      "text2": "As someone who travels frequently for work, this platform has become indispensable. Fast, reliable, and always the best prices.",
-      "name2": "Michael Chen",
-      "role2": "Business Consultant",
-      "text3": "The mobile app is amazing! Booked my entire Southeast Asia trip in minutes. The 24/7 support team was super helpful too.",
-      "name3": "Emma Rodriguez",
-      "role3": "Content Creator",
-      "avgRating": "Average Rating",
-      "reviews": "Reviews",
-      "happyCustomers": "Happy Customers"
-    },
-    "partners": {
-      "title": "Trusted Airline Partners",
-      "subtitle": "We partner with 500+ airlines worldwide to bring you the best deals",
-      "moreAirlines": "And <bold>490+ more airlines</bold> to choose from"
-    },
-    "newsletter": {
-      "title": "Don't miss great deals",
-      "subtitle": "Subscribe to our newsletter and get special offers on flights.",
-      "emailPlaceholder": "Your email",
-      "subscribe": "Subscribe",
-      "success": "Subscriptions coming soon. Thanks for your interest!",
-      "noSpam": "No spam. Unsubscribe anytime.",
-      "benefit1": "Exclusive fares",
-      "benefit2": "Special promotions",
-      "benefit3": "Travel ideas"
-    },
     "footer": {
-      "description": "Your trusted partner for finding the best flight deals worldwide. We compare prices from hundreds of airlines to help you save money and travel more.",
-      "quickLinks": "Quick Links",
-      "aboutUs": "About Us",
-      "destinations": "Destinations",
-      "flightDeals": "Flight Deals",
-      "airlines": "Airlines",
-      "helpCenter": "Help Center",
-      "support": "Support",
-      "contactUs": "Contact Us",
-      "faqs": "FAQs",
-      "bookingHelp": "Booking Help",
-      "cancellations": "Cancellations",
-      "refunds": "Refunds",
-      "contact": "Contact",
-      "copyright": "© 2026 MaxAirline. All rights reserved.",
-      "privacy": "Privacy Policy",
-      "terms": "Terms of Service",
-      "cookies": "Cookie Policy",
-      "sitemap": "Sitemap",
-      "badgeSecure": "Secure Payment",
-      "badgeSupport": "24/7 Support",
-      "badgePrice": "Best Price Guarantee",
-      "badgeTrusted": "Trusted by Millions"
+      "description": "Flight booking demo — search, seat selection, payments, and order history through a real backend API.",
+      "copyright": "© 2026 MaxAirline. Portfolio project."
     }
   }
 }
