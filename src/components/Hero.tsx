@@ -7,13 +7,6 @@ import { HeroSearch } from "@/features/search/components/HeroSearch/HeroSearch";
 export function Hero() {
   const t = useTranslations("home.hero");
 
-  const stats = [
-    { value: "500+", label: t("statAirlines") },
-    { value: "2000+", label: t("statDestinations") },
-    { value: "5M+", label: t("statTravelers") },
-    { value: "60%", label: t("statSavings") },
-  ];
-
   return (
     <section className="relative pt-34 pb-18 px-4 ">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-sky-400 to-indigo-500 -z-10"></div>
@@ -37,17 +30,6 @@ export function Hero() {
         >
           <HeroSearch />
         </Suspense>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
-          {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <div className="text-3xl font-bold text-white mb-1">
-                {stat.value}
-              </div>
-              <div className="text-sm text-blue-50">{stat.label}</div>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
