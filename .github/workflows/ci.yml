@@ -3,24 +3,32 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - dev
+      - master
   pull_request:
     branches:
-      - main
+      - dev
+      - master
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+  NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+  NEXT_PUBLIC_VK_APP_ID: ci-placeholder
+  NEXT_PUBLIC_VK_REDIRECT_URL: http://localhost
+
 jobs:
-  build:
+  quality:
     name: Lint & build
     runs-on: ubuntu-latest
-
-    env:
-      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
-      NEXT_PUBLIC_VK_APP_ID: ci-placeholder
-      NEXT_PUBLIC_VK_REDIRECT_URL: http://localhost:3111
 
     steps:
       - name: Checkout repository
@@ -29,7 +37,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11.14.0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -45,3 +53,52 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  docker:
+    name: Build & push image
+    needs: quality
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1' }}
+      NEXT_PUBLIC_VK_APP_ID: ${{ vars.NEXT_PUBLIC_VK_APP_ID || 'ci-placeholder' }}
+      NEXT_PUBLIC_VK_REDIRECT_URL: ${{ vars.NEXT_PUBLIC_VK_REDIRECT_URL || 'http://localhost' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_VK_APP_ID=${{ env.NEXT_PUBLIC_VK_APP_ID }}
+            NEXT_PUBLIC_VK_REDIRECT_URL=${{ env.NEXT_PUBLIC_VK_REDIRECT_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

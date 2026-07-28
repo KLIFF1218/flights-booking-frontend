@@ -6,7 +6,15 @@ export type FlightSegment = {
   to: string;
   departureTime: string;
   arrivalTime: string;
+  departureLocalDate?: string;
+  departureLocalTime?: string;
+  departureTimezone?: string;
+  arrivalLocalDate?: string;
+  arrivalLocalTime?: string;
+  arrivalTimezone?: string;
   airline: string;
+  airlineName?: string;
+  airlineIata?: string;
   flightNumber: string;
   aircraft?: string;
   operatingCarrier?: string;
@@ -22,18 +30,25 @@ export type FlightRoute = {
     airport: string;
     time: string;
     date: string;
+    localDate?: string;
+    localTime?: string;
+    timezone?: string;
   };
 
   arrival: {
     airport: string;
     time: string;
     date: string;
+    localDate?: string;
+    localTime?: string;
+    timezone?: string;
   };
 
   durationMinutes: number;
   stops: number;
   stopCodes: string[];
   airline: string;
+  airlineIata?: string;
   segments: FlightSegment[];
 };
 
@@ -43,8 +58,8 @@ export type FlightCardResponse = {
     total: number;
     currency: string;
   };
+  cabin?: CabinClass;
+  checkedBags?: number;
   routes: FlightRoute[];
   totalDurationMinutes: number;
 };
-
-

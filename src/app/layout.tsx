@@ -1,9 +1,13 @@
-import '@/app/globals.css';
+import "@/app/globals.css";
 
-import { AuthInitializer } from "@/components/AuthInitializer";
-import { CurrencyInitializer } from "@/components/CurrencyInitializer";
-import { ThemeInitializer } from "@/components/ThemeInitializer";
-import { Header } from "@/shared/ui/header/Header";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    default: "MaxAirline",
+    template: "%s — MaxAirline",
+  },
+};
 
 export default function RootLayout({
   children,
@@ -11,16 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ru">
-      <body>
-        <AuthInitializer />
-        <CurrencyInitializer />
-        <ThemeInitializer />
-
-        <Header />
-
-        <main>{children}</main>
-      </body>
+    <html lang="en" suppressHydrationWarning>
+      <body>{children}</body>
     </html>
   );
 }

@@ -1,21 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { useAuthStore } from "@/lib/auth-store";
 import {
   generateCodeVerifier,
   generateCodeChallenge,
 } from "@/features/auth/vk/pkce";
 import { initVk } from "@/features/auth/vk/vk-init";
 import { startVkLogin } from "@/features/auth/vk/vk-login";
-import { buildApiUrl } from "@/shared/api/buildApiUrl";
-import { setAccessToken, apiFetch } from "@/shared/api/apiClient";
-
-type User = {
-  id: string;
-  email: string;
-  firstName?: string;
-};
+import {
+  AuthError,
+  exchangeVkCode,
+  prepareVkState,
+} from "@/features/auth/api/auth.api";
 
 type VkLoginResult = {
   code: string;
@@ -23,16 +19,15 @@ type VkLoginResult = {
   state: string;
 };
 
-type VkExchangeResponse = {
-  accessToken: string;
-  accessMaxAge: number;
+export type VkAuthResult = {
+  success: boolean;
+  error?: string;
 };
 
 export function useVkLogin() {
   const [loading, setLoading] = useState(false);
-  const { setUser } = useAuthStore();
 
-  const login = async (): Promise<User | null> => {
+  const login = async (): Promise<VkAuthResult> => {
     try {
       setLoading(true);
 
@@ -40,55 +35,38 @@ export function useVkLogin() {
       const challenge = await generateCodeChallenge(verifier);
       const state = crypto.randomUUID();
 
+      await prepareVkState(state);
       initVk(challenge, state);
 
       const result = await startVkLogin();
-      if (!result) return null;
-
-      const exchangeResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/vk/exchange`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({
-            code: (result as VkLoginResult).code,
-            device_id: (result as VkLoginResult).device_id,
-            state: (result as VkLoginResult).state,
-            code_verifier: verifier,
-          }),
-        },
-      );
-
-      if (!exchangeResponse.ok) throw new Error("VK exchange failed");
-
-      const exchangeData =
-        (await exchangeResponse.json()) as VkExchangeResponse;
-      if (exchangeData.accessToken) {
-        setAccessToken(exchangeData.accessToken);
+      if (!result) {
+        return { success: false, error: "VK sign-in was cancelled" };
       }
 
-      try {
-        const user = await apiFetch<User>("/users/me");
-        setUser(user);
-        return user;
-      } catch (error) {
-        console.warn(
-          "Failed to fetch user profile, but auth succeeded:",
-          error,
-        );
+      const vkResult = result as VkLoginResult;
+
+      if (vkResult.state !== state) {
+        return { success: false, error: "VK sign-in state mismatch" };
       }
 
-      const fallbackUser: User = {
-        id: "unknown",
-        email: "user@vk",
-        firstName: "VK User",
-      };
-      setUser(fallbackUser);
-      return fallbackUser;
+      await exchangeVkCode({
+        code: vkResult.code,
+        device_id: vkResult.device_id,
+        state: vkResult.state,
+        code_verifier: verifier,
+      });
+
+      return { success: true };
     } catch (error) {
-      console.error(error);
-      return null;
+      return {
+        success: false,
+        error:
+          error instanceof AuthError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "VK sign-in failed",
+      };
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useId } from "react";
+import { useTranslations } from "next-intl";
 import { useAirportSearch } from "@/features/search/hooks/useAirportSearch";
 import type { AirportLocation } from "@/shared/types/airport";
 import styles from "./AirportInput.module.css";
@@ -12,6 +13,8 @@ type Props = {
   placeholder: string;
   exclude?: string;
   className?: string;
+  /** Stable id for listbox/combobox a11y — avoids useId() SSR hydration mismatches */
+  listboxId?: string;
 };
 
 export function AirportInput({
@@ -20,7 +23,9 @@ export function AirportInput({
   placeholder,
   exclude,
   className,
+  listboxId,
 }: Props) {
+  const t = useTranslations("search");
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [query, setQuery] = useState(value ?? "");
@@ -31,7 +36,8 @@ export function AirportInput({
   const selectedIataRef = useRef<string | null>(value || null);
   const { data, loading } = useAirportSearch(debouncedQuery);
   const [activeIndex, setActiveIndex] = useState(0);
-  const id = useId();
+  const generatedId = useId();
+  const listId = listboxId ?? generatedId;
   const hasSearched = debouncedQuery.length >= 2;
 
   useEffect(() => {
@@ -100,10 +106,10 @@ export function AirportInput({
         aria-autocomplete="list"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-controls={`airport-list-${id}`}
+        aria-controls={`airport-list-${listId}`}
         aria-activedescendant={
           open && data[activeIndex]
-            ? `airport-option-${id}-${activeIndex}`
+            ? `airport-option-${listId}-${activeIndex}`
             : undefined
         }
         className={`${styles.input} ${className ?? ""}`}
@@ -126,12 +132,12 @@ export function AirportInput({
         <div
           className={styles.dropdown}
           role="listbox"
-          id={`airport-list-${id}`}
+          id={`airport-list-${listId}`}
         >
-          {loading && <div className={styles.itemMuted}>Поиск…</div>}
+          {loading && <div className={styles.itemMuted}>{t("airportSearching")}</div>}
 
           {!loading && hasSearched && data.length === 0 && (
-            <div className={styles.itemMuted}>Ничего не найдено</div>
+            <div className={styles.itemMuted}>{t("airportNothingFound")}</div>
           )}
 
           {data.map((item, index) => {
@@ -141,7 +147,7 @@ export function AirportInput({
             return (
               <button
                 key={item.id}
-                id={`airport-option-${id}-${index}`}
+                id={`airport-option-${listId}-${index}`}
                 type="button"
                 disabled={disabled}
                 className={`${styles.item} ${isActive ? styles.itemActive : ""}`}

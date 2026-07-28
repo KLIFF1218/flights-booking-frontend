@@ -1,4 +1,9 @@
-export function formatPrice(price: number) {
-  return Number(price).toLocaleString("ru-RU");
+export function formatPrice(price: number, locale = "en") {
+  const formatLocale = locale === "ru" ? "ru-RU" : "en-US";
+
+  return Number(price).toLocaleString(formatLocale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 

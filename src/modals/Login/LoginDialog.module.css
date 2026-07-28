@@ -6,6 +6,15 @@
   z-index: 1110;
 }
 
+.overlayElevated {
+  background: rgba(15, 23, 42, 0.55);
+  position: fixed;
+  inset: 0;
+  animation: fadeIn 150ms ease;
+  z-index: 11000;
+  backdrop-filter: blur(2px);
+}
+
 .content {
   position: fixed;
   top: 50%;
@@ -19,6 +28,21 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
   animation: scaleIn 150ms ease;
   z-index: 1111;
+}
+
+.contentElevated {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 420px;
+  max-width: 95vw;
+  background: white;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+  animation: scaleIn 150ms ease;
+  z-index: 11001;
 }
 
 .title {

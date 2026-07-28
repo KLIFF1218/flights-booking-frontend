@@ -8,22 +8,14 @@
 
 .cardsDiv {
   width: 100%;
-  max-width: 480px;
-  min-width: 320px;
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: auto;
 }
-
 
 .cardContainer {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  width: 100%;
 }
-
-@media (min-width: 768px) {
-  .cardsDiv {
-    max-width: 800px;
-  }
-}
-
-
-

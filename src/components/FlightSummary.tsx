@@ -1,47 +1,33 @@
 import { FlightFormData } from "./FlightForm";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Separator } from "./ui/separator";
-import { Plane, Calendar, DollarSign, Users } from "lucide-react";
+import { Plane, Calendar, DollarSign } from "lucide-react";
+import type { AdminFlightTemplate } from "@/features/flights/api/admin-flights.api";
 
 interface FlightSummaryProps {
   formData: FlightFormData;
+  selectedTemplate?: AdminFlightTemplate | null;
 }
 
-export function FlightSummary({ formData }: FlightSummaryProps) {
+function formatMoney(currency: string, value: string) {
+  if (!value.trim()) return "—";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  return `${currency} ${n.toFixed(2)}`;
+}
+
+export function FlightSummary({ formData, selectedTemplate }: FlightSummaryProps) {
   const getRouteDisplay = () => {
-    if (!formData.route) return "—";
-    return formData.route;
-  };
-
-  const getAircraftDisplay = () => {
-    if (!formData.aircraft) return "—";
-    return formData.aircraft;
-  };
-
-  const getSeatCount = () => {
-    if (!formData.aircraft) return "—";
-    const match = formData.aircraft.match(/(\d+)\s*seats/);
-    return match ? match[1] : "—";
+    if (selectedTemplate) {
+      return `${selectedTemplate.departureAirport.iataCode} → ${selectedTemplate.arrivalAirport.iataCode}`;
+    }
+    return "—";
   };
 
   const getDateTimeDisplay = () => {
     if (!formData.departureDate || !formData.departureTime) return "—";
-    const date = new Date(
-      `${formData.departureDate}T${formData.departureTime}`,
-    );
-    return date.toLocaleString("en-US", {
-      weekday: "short",
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const getPriceDisplay = () => {
-    if (!formData.basePrice) return "—";
-    return `${formData.currency} ${parseFloat(formData.basePrice).toFixed(2)}`;
+    const tz = selectedTemplate?.departureAirport.timezone;
+    return `${formData.departureDate} ${formData.departureTime}${tz ? ` (${tz})` : ""}`;
   };
 
   return (
@@ -66,13 +52,19 @@ export function FlightSummary({ formData }: FlightSummaryProps) {
 
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
-            <Users className="w-4 h-4 text-gray-600" />
+            <Plane className="w-4 h-4 text-gray-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500">Aircraft</p>
+            <p className="text-xs text-gray-500">Flight</p>
             <p className="text-sm font-medium text-gray-900 mt-0.5 truncate">
-              {getAircraftDisplay()}
+              {selectedTemplate?.flightNumber || "—"} ·{" "}
+              {formData.aircraftLabel || "—"}
             </p>
+            {selectedTemplate && (
+              <p className="text-xs text-gray-500 mt-1">
+                {selectedTemplate.airline.name} · {selectedTemplate.durationMinutes} min
+              </p>
+            )}
           </div>
         </div>
 
@@ -83,7 +75,7 @@ export function FlightSummary({ formData }: FlightSummaryProps) {
             <Calendar className="w-4 h-4 text-gray-600" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500">Departure</p>
+            <p className="text-xs text-gray-500">Departure (local)</p>
             <p className="text-sm font-medium text-gray-900 mt-0.5">
               {getDateTimeDisplay()}
             </p>
@@ -96,29 +88,22 @@ export function FlightSummary({ formData }: FlightSummaryProps) {
           <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
             <DollarSign className="w-4 h-4 text-gray-600" />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500">Base Price</p>
-            <p className="text-sm font-medium text-gray-900 mt-0.5">
-              {getPriceDisplay()}
+          <div className="flex-1 min-w-0 space-y-1">
+            <p className="text-xs text-gray-500">Adult fares</p>
+            <p className="text-sm text-gray-900">
+              Economy: {formatMoney(formData.currency, formData.economyPrice)}
             </p>
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="bg-indigo-50 rounded-lg p-4 mt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-indigo-600 font-medium">
-                Estimated Seat Count
+            <p className="text-sm text-gray-900">
+              Premium: {formatMoney(formData.currency, formData.premiumEconomyPrice)}
+            </p>
+            <p className="text-sm text-gray-900">
+              Business: {formatMoney(formData.currency, formData.businessPrice)}
+            </p>
+            {selectedTemplate?.supportsFirstClass && (
+              <p className="text-sm text-gray-900">
+                First: {formatMoney(formData.currency, formData.firstPrice)}
               </p>
-              <p className="text-2xl font-semibold text-indigo-900 mt-1">
-                {getSeatCount()}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Users className="w-6 h-6 text-indigo-600" />
-            </div>
+            )}
           </div>
         </div>
       </CardContent>

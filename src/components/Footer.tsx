@@ -1,6 +1,49 @@
-import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
+"use client";
+
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export function Footer() {
+  const t = useTranslations("home.footer");
+
+  const quickLinks = [
+    t("aboutUs"),
+    t("destinations"),
+    t("flightDeals"),
+    t("airlines"),
+    t("helpCenter"),
+  ];
+
+  const supportLinks = [
+    t("contactUs"),
+    t("faqs"),
+    t("bookingHelp"),
+    t("cancellations"),
+    t("refunds"),
+  ];
+
+  const legalLinks = [
+    { href: "#", label: t("privacy") },
+    { href: "#", label: t("terms") },
+    { href: "#", label: t("cookies") },
+    { href: "#", label: t("sitemap") },
+  ];
+
+  const badges = [
+    t("badgeSecure"),
+    t("badgeSupport"),
+    t("badgePrice"),
+    t("badgeTrusted"),
+  ];
+
   return (
     <footer className="bg-gray-900 text-gray-300 pt-16 pb-8 px-4">
       <div className="container mx-auto max-w-7xl">
@@ -8,18 +51,26 @@ export function Footer() {
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-400 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
                 </svg>
               </div>
-              <span className="text-xl font-semibold text-white">CheapTickets</span>
+              <span className="text-xl font-semibold text-white">MaxAirline</span>
             </div>
-            <p className="text-gray-400 mb-6 leading-relaxed">
-              Your trusted partner for finding the best flight deals worldwide. We compare prices from hundreds of airlines to help you save money and travel more.
-            </p>
+            <p className="text-gray-400 mb-6 leading-relaxed">{t("description")}</p>
             <div className="flex gap-3">
               {[Facebook, Twitter, Instagram, Linkedin].map((Icon, index) => (
-                <a 
+                <a
                   key={index}
                   href="#"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-blue-600 transition"
@@ -31,33 +82,37 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-white font-semibold mb-4">{t("quickLinks")}</h3>
             <ul className="space-y-3">
-              {["About Us", "Destinations", "Flight Deals", "Airlines", "Help Center"].map((link, index) => (
-                <li key={index}>
-                  <a href="#" className="hover:text-blue-400 transition">{link}</a>
+              {quickLinks.map((link) => (
+                <li key={link}>
+                  <a href="#" className="hover:text-blue-400 transition">
+                    {link}
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-4">Support</h3>
+            <h3 className="text-white font-semibold mb-4">{t("support")}</h3>
             <ul className="space-y-3">
-              {["Contact Us", "FAQs", "Booking Help", "Cancellations", "Refunds"].map((link, index) => (
-                <li key={index}>
-                  <a href="#" className="hover:text-blue-400 transition">{link}</a>
+              {supportLinks.map((link) => (
+                <li key={link}>
+                  <a href="#" className="hover:text-blue-400 transition">
+                    {link}
+                  </a>
                 </li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="text-white font-semibold mb-4">Contact</h3>
+            <h3 className="text-white font-semibold mb-4">{t("contact")}</h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <Mail className="w-5 h-5 mt-0.5 text-blue-400 flex-shrink-0" />
-                <span className="text-sm">support@cheaptickets.com</span>
+                <span className="text-sm">support@maxairline.com</span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="w-5 h-5 mt-0.5 text-blue-400 flex-shrink-0" />
@@ -73,21 +128,27 @@ export function Footer() {
 
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500">
-              © 2026 CheapTickets. All rights reserved.
-            </p>
+            <p className="text-sm text-gray-500">{t("copyright")}</p>
             <div className="flex flex-wrap gap-6 text-sm">
-              <a href="#" className="hover:text-blue-400 transition">Privacy Policy</a>
-              <a href="#" className="hover:text-blue-400 transition">Terms of Service</a>
-              <a href="#" className="hover:text-blue-400 transition">Cookie Policy</a>
-              <a href="#" className="hover:text-blue-400 transition">Sitemap</a>
+              {legalLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="hover:text-blue-400 transition"
+                >
+                  {link.label}
+                </a>
+              ))}
             </div>
           </div>
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-8 items-center">
-          {["Secure Payment", "24/7 Support", "Best Price Guarantee", "Trusted by Millions"].map((badge, index) => (
-            <div key={index} className="text-sm text-gray-500 flex items-center gap-2">
+          {badges.map((badge) => (
+            <div
+              key={badge}
+              className="text-sm text-gray-500 flex items-center gap-2"
+            >
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
               {badge}
             </div>

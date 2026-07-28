@@ -26,12 +26,20 @@ export interface PricedFlight {
     total: number;
     currency: string;
     base?: number;
+    taxes?: number;
+    fees?: number;
     seats?: number;
   };
 
   travelers: Array<{
     travelerId: string;
     travelerType: string;
+    fareDetailsBySegment?: Array<{
+      cabin?: string;
+      includedCheckedBags?: {
+        quantity?: number;
+      };
+    }>;
   }>;
 
   outbound: {
@@ -39,6 +47,12 @@ export interface PricedFlight {
     to: string;
     departureTime: string;
     arrivalTime: string;
+    departureLocalDate?: string;
+    departureLocalTime?: string;
+    departureTimezone?: string;
+    arrivalLocalDate?: string;
+    arrivalLocalTime?: string;
+    arrivalTimezone?: string;
     durationMinutes: number;
     stops: number;
     segments: Array<{
@@ -46,7 +60,15 @@ export interface PricedFlight {
       to: string;
       departureTime: string;
       arrivalTime: string;
+      departureLocalDate?: string;
+      departureLocalTime?: string;
+      departureTimezone?: string;
+      arrivalLocalDate?: string;
+      arrivalLocalTime?: string;
+      arrivalTimezone?: string;
       airline: string;
+      airlineName?: string;
+      airlineIata?: string;
       flightNumber: string;
     }>;
   };

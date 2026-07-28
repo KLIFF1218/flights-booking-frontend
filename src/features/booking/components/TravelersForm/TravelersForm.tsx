@@ -1,28 +1,21 @@
 "use client";
 
-import { useEffect } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 import { Trash2 } from "lucide-react";
-
-export type TravelerForm = {
-  id: string;
-  type: "adult" | "child" | "infant";
-
-  firstName: string;
-  lastName: string;
-  gender: "MALE" | "FEMALE";
-  dateOfBirth: string;
-
-  email: string;
-  phoneCountryCode: string;
-  phoneNumber: string;
-
-  passportNumber: string;
-  passportIssuanceDate: string;
-  passportExpiry: string;
-
-  birthPlace: string;
-  nationality: string;
-};
+import { useTranslations } from "next-intl";
+import type { FieldError } from "react-hook-form";
+import type { SavedPassengerProfile } from "@/features/booking/api/saved-passengers.api";
+import { SavedPassengerPicker } from "@/features/booking/components/SavedPassengerPicker/SavedPassengerPicker";
+import {
+  findProfileForTraveler,
+  formatAdultTravelerLabel,
+  savedPassengerTypeMatchesSlot,
+} from "@/features/booking/mappers/saved-passenger.mapper";
+import type {
+  TravelerForm,
+  TravelersFormValues,
+} from "@/features/booking/validation/traveler.schema";
+import { isInfantFormType } from "@/features/booking/validation/traveler.schema";
 
 const inputClass =
   "block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
@@ -32,149 +25,195 @@ const selectClass =
 
 export function TravelersForm({
   travelers,
-  setTravelers,
   onDeletePassenger,
+  allowDelete = false,
+  savedProfiles = [],
+  onSelectSavedProfile,
+  isInternational = true,
 }: {
   travelers: TravelerForm[];
-  setTravelers: React.Dispatch<React.SetStateAction<TravelerForm[]>>;
-  onDeletePassenger: (id: string) => void;
+  onDeletePassenger?: (id: string) => void;
+  allowDelete?: boolean;
+  savedProfiles?: SavedPassengerProfile[];
+  onSelectSavedProfile?: (travelerIndex: number, profileId: string) => void;
+  isInternational?: boolean;
 }) {
-  function updateTraveler(
-    index: number,
-    field: keyof TravelerForm,
-    value: string,
-  ) {
-    setTravelers((prev) => {
-      const copy = [...prev];
-      copy[index] = { ...copy[index], [field]: value };
-      return copy;
-    });
-  }
+  const t = useTranslations("booking.travelersForm");
+  const {
+    register,
+    setValue,
+    formState: { errors },
+  } = useFormContext<TravelersFormValues>();
+  const watchedTravelers = useWatch<TravelersFormValues>({ name: "travelers" });
+  const currentTravelers = (watchedTravelers ?? travelers) as TravelerForm[];
 
-  const counters = {
-    adult: 0,
-    child: 0,
-    infant: 0,
+  const typeLabels: Record<TravelerForm["type"], string> = {
+    adult: t("typeAdult"),
+    child: t("typeChild"),
+    infant: t("typeInfant"),
+    seated_infant: t("typeSeatedInfant"),
   };
 
   return (
     <div className="space-y-6">
-      {travelers.map((t, i) => {
-        const typeLabels: Record<TravelerForm["type"], string> = {
-          adult: "взрослый",
-          child: "ребенок",
-          infant: "младенец",
-        };
-
-        const label = `${i + 1}-й пассажир, ${typeLabels[t.type]}`;
+      {currentTravelers.map((traveler, i) => {
+        const label = t("passengerTitle", {
+          index: i + 1,
+          type: typeLabels[traveler.type],
+        });
+        const adultTravelers = currentTravelers
+          .map((item, index) => ({ traveler: item, index }))
+          .filter(({ traveler: item }) => item.type === "adult");
+        const isInfant = isInfantFormType(traveler.type);
+        const matchingProfiles = savedProfiles.filter((profile) =>
+          savedPassengerTypeMatchesSlot(profile, traveler.type),
+        );
+        const selectedProfile = findProfileForTraveler(traveler, matchingProfiles);
+        const usedProfileIds = currentTravelers
+          .map((item, index) => {
+            if (index === i) return null;
+            return findProfileForTraveler(item, savedProfiles)?.id ?? null;
+          })
+          .filter((id): id is string => Boolean(id));
 
         return (
           <div
-            key={t.id}
+            key={traveler.id}
             className="border border-gray-200 rounded-lg p-4 sm:p-6"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-gray-900">{label}</h3>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-semibold text-gray-900">{label}</h3>
+                {traveler.type === "infant" ? (
+                  <p className="mt-1 text-sm text-gray-500">{t("infantLapHint")}</p>
+                ) : null}
+                {traveler.type === "seated_infant" ? (
+                  <p className="mt-1 text-sm text-gray-500">{t("infantSeatHint")}</p>
+                ) : null}
+              </div>
 
-              {i !== 0 && (
+              {allowDelete && i !== 0 && onDeletePassenger && (
                 <button
                   type="button"
-                  onClick={() => onDeletePassenger(t.id)}
+                  onClick={() => onDeletePassenger(traveler.id)}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Trash2 size={20} />
-                  <span className="text-sm font-medium">Удалить</span>
+                  <span className="text-sm font-medium">{t("delete")}</span>
                 </button>
               )}
             </div>
 
+            {matchingProfiles.length > 0 && onSelectSavedProfile && (
+              <SavedPassengerPicker
+                profiles={matchingProfiles}
+                selectedProfileId={selectedProfile?.id}
+                usedProfileIds={usedProfileIds}
+                onSelect={(profileId) => onSelectSavedProfile(i, profileId)}
+              />
+            )}
+
+            {isInfant ? (
+              <div className="mb-4">
+                <label className="flex flex-col text-sm font-medium text-gray-700">
+                  <span className="h-10 flex items-end">{t("accompanyingAdult")}</span>
+                  <select
+                    {...register(`travelers.${i}.accompanyingAdultId`)}
+                    className={selectClass}
+                    onChange={(event) => {
+                      setValue(`travelers.${i}.accompanyingAdultId`, event.target.value, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                      });
+                    }}
+                  >
+                    <option value="">{t("selectAdult")}</option>
+                    {adultTravelers.map(({ traveler: adult, index: adultIndex }) => (
+                      <option key={adult.id} value={adult.id}>
+                        {formatAdultTravelerLabel(adult, adultIndex, (index) =>
+                          t("adultFallback", { index }),
+                        )}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.travelers?.[i]?.accompanyingAdultId?.message ? (
+                    <span className="mt-1 text-sm text-red-600">
+                      {errors.travelers[i]?.accompanyingAdultId?.message}
+                    </span>
+                  ) : null}
+                </label>
+              </div>
+            ) : null}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Место рождения (латиницей)">
-                <input
-                  className={inputClass}
-                  value={t.birthPlace}
-                  onChange={(e) =>
-                    updateTraveler(
-                      i,
-                      "birthPlace",
-                      e.target.value.toUpperCase(),
-                    )
-                  }
-                  placeholder="MOSCOW"
-                />
-              </Field>
+              {!isInfant ? (
+                <Field label={t("birthPlace")} error={errors.travelers?.[i]?.birthPlace}>
+                  <input
+                    {...register(`travelers.${i}.birthPlace`)}
+                    className={inputClass}
+                    placeholder="MOSCOW"
+                  />
+                </Field>
+              ) : null}
 
-              <Field label="Гражданство">
-                <select
-                  className={selectClass}
-                  value={t.nationality}
-                  onChange={(e) =>
-                    updateTraveler(i, "nationality", e.target.value)
-                  }
-                >
-                  <option value="RU">Россия</option>
-                  <option value="UA">Украина</option>
-                  <option value="KZ">Казахстан</option>
-                  <option value="BY">Беларусь</option>
-                </select>
-              </Field>
+              {!isInfant || isInternational ? (
+                <Field label={t("nationality")} error={errors.travelers?.[i]?.nationality}>
+                  <select
+                    {...register(`travelers.${i}.nationality`)}
+                    className={selectClass}
+                  >
+                    <option value="RU">{t("countryRU")}</option>
+                    <option value="UA">{t("countryUA")}</option>
+                    <option value="KZ">{t("countryKZ")}</option>
+                    <option value="BY">{t("countryBY")}</option>
+                  </select>
+                </Field>
+              ) : null}
 
-              <Field label="Имя">
+              <Field label={t("firstName")} error={errors.travelers?.[i]?.firstName}>
                 <input
+                  {...register(`travelers.${i}.firstName`)}
                   className={inputClass}
-                  value={t.firstName}
-                  onChange={(e) =>
-                    updateTraveler(i, "firstName", e.target.value)
-                  }
                   placeholder="IVAN"
                 />
               </Field>
 
-              <Field label="Фамилия">
+              <Field label={t("lastName")} error={errors.travelers?.[i]?.lastName}>
                 <input
+                  {...register(`travelers.${i}.lastName`)}
                   className={inputClass}
-                  value={t.lastName}
-                  onChange={(e) =>
-                    updateTraveler(i, "lastName", e.target.value)
-                  }
                   placeholder="IVANOV"
                 />
               </Field>
 
-              <Field label="Дата рождения">
+              <Field
+                label={t("dateOfBirth")}
+                error={errors.travelers?.[i]?.dateOfBirth}
+              >
                 <input
                   type="date"
+                  {...register(`travelers.${i}.dateOfBirth`)}
                   className={inputClass}
-                  value={t.dateOfBirth}
-                  onChange={(e) =>
-                    updateTraveler(i, "dateOfBirth", e.target.value)
-                  }
                 />
               </Field>
 
-              <Field label="Пол">
+              <Field label={t("gender")} error={errors.travelers?.[i]?.gender}>
                 <select
+                  {...register(`travelers.${i}.gender`)}
                   className={selectClass}
-                  value={t.gender}
-                  onChange={(e) =>
-                    updateTraveler(i, "gender", e.target.value as any)
-                  }
                 >
-                  <option value="MALE">Мужской</option>
-                  <option value="FEMALE">Женский</option>
+                  <option value="MALE">{t("male")}</option>
+                  <option value="FEMALE">{t("female")}</option>
                 </select>
               </Field>
 
               {i === 0 && (
                 <div className="sm:col-span-2">
-                  <Field label="Email">
+                  <Field label={t("email")} error={errors.travelers?.[i]?.email}>
                     <input
                       type="email"
+                      {...register(`travelers.${i}.email`)}
                       className={inputClass}
-                      value={t.email}
-                      onChange={(e) =>
-                        updateTraveler(i, "email", e.target.value)
-                      }
                       placeholder="example@email.com"
                     />
                   </Field>
@@ -183,35 +222,27 @@ export function TravelersForm({
 
               {i === 0 && (
                 <div className="sm:col-span-2">
-                  <Field label="Телефон">
+                  <Field
+                    label={t("phone")}
+                    error={
+                      errors.travelers?.[i]?.phoneNumber ||
+                      errors.travelers?.[i]?.phoneCountryCode
+                    }
+                  >
                     <div className="flex gap-2">
                       <div className="flex items-center border border-gray-300 rounded-md shadow-sm px-3 py-2 w-20">
                         <span className="text-gray-500">+</span>
                         <input
                           maxLength={3}
-                          value={t.phoneCountryCode}
-                          onChange={(e) =>
-                            updateTraveler(
-                              i,
-                              "phoneCountryCode",
-                              e.target.value.replace(/\D/g, ""),
-                            )
-                          }
-                          placeholder="7"
+                          {...register(`travelers.${i}.phoneCountryCode`)}
                           className="w-full focus:outline-none"
+                          placeholder="7"
                         />
                       </div>
 
                       <input
+                        {...register(`travelers.${i}.phoneNumber`)}
                         className={inputClass}
-                        value={t.phoneNumber}
-                        onChange={(e) =>
-                          updateTraveler(
-                            i,
-                            "phoneNumber",
-                            e.target.value.replace(/\D/g, ""),
-                          )
-                        }
                         placeholder="9991234567"
                       />
                     </div>
@@ -219,40 +250,50 @@ export function TravelersForm({
                 </div>
               )}
 
-              <Field label="Номер паспорта">
-                <input
-                  className={inputClass}
-                  value={t.passportNumber}
-                  onChange={(e) =>
-                    updateTraveler(i, "passportNumber", e.target.value)
-                  }
-                  placeholder="1234 567890"
-                />
-              </Field>
+              {!isInfant || isInternational ? (
+                <>
+                  <Field
+                    label={isInfant ? t("documentNumber") : t("passportNumber")}
+                    error={errors.travelers?.[i]?.passportNumber}
+                  >
+                    <input
+                      {...register(`travelers.${i}.passportNumber`)}
+                      className={inputClass}
+                      placeholder={isInfant ? "1234567890" : "1234 567890"}
+                    />
+                  </Field>
 
-              <Field label="Дата выдачи паспорта">
-                <input
-                  type="date"
-                  className={inputClass}
-                  value={t.passportIssuanceDate}
-                  onChange={(e) =>
-                    updateTraveler(i, "passportIssuanceDate", e.target.value)
-                  }
-                />
-              </Field>
+                  {!isInfant ? (
+                    <Field
+                      label={t("passportIssueDate")}
+                      error={errors.travelers?.[i]?.passportIssuanceDate}
+                    >
+                      <input
+                        type="date"
+                        {...register(`travelers.${i}.passportIssuanceDate`)}
+                        className={inputClass}
+                      />
+                    </Field>
+                  ) : null}
 
-              <div className="sm:col-span-2">
-                <Field label="Срок действия паспорта">
-                  <input
-                    type="date"
-                    className={inputClass}
-                    value={t.passportExpiry}
-                    onChange={(e) =>
-                      updateTraveler(i, "passportExpiry", e.target.value)
-                    }
-                  />
-                </Field>
-              </div>
+                  <div className={isInfant ? "" : "sm:col-span-2"}>
+                    <Field
+                      label={isInfant ? t("documentExpiry") : t("passportExpiry")}
+                      error={errors.travelers?.[i]?.passportExpiry}
+                    >
+                      <input
+                        type="date"
+                        {...register(`travelers.${i}.passportExpiry`)}
+                        className={inputClass}
+                      />
+                    </Field>
+                  </div>
+                </>
+              ) : (
+                <p className="sm:col-span-2 text-sm text-gray-500">
+                  {t("domesticInfantNote")}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -264,14 +305,19 @@ export function TravelersForm({
 function Field({
   label,
   children,
+  error,
 }: {
   label: string;
   children: React.ReactNode;
+  error?: FieldError;
 }) {
   return (
     <label className="flex flex-col text-sm font-medium text-gray-700">
       <span className="h-10 flex items-end">{label}</span>
       {children}
+      {error?.message ? (
+        <span className="mt-1 text-sm text-red-600">{error.message}</span>
+      ) : null}
     </label>
   );
 }

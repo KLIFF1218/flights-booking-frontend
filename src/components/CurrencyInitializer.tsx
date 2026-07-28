@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
+import { useLocale } from "next-intl";
 
-const CURRENCY_STORAGE_KEY = "currency";
-const DEFAULT_CURRENCY = "USD";
+import { applyLocaleCurrencyIfAuto } from "@/shared/utils/currency";
 
 export function CurrencyInitializer() {
-  useEffect(() => {
-    const storedCurrency = localStorage.getItem(CURRENCY_STORAGE_KEY);
+  const locale = useLocale();
 
-    if (!storedCurrency) {
-      localStorage.setItem(CURRENCY_STORAGE_KEY, DEFAULT_CURRENCY);
-    }
-  }, []);
+  useLayoutEffect(() => {
+    applyLocaleCurrencyIfAuto(locale);
+  }, [locale]);
 
   return null;
 }

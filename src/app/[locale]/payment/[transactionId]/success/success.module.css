@@ -1,0 +1,540 @@
+.container {
+  min-height: 100vh;
+  padding: 48px 20px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(37, 99, 235, 0.12),
+      transparent 30%
+    ),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+}
+
+.card {
+  max-width: 1100px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border-radius: 28px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow:
+    0 20px 60px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 32px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding: 28px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #eff6ff, #ffffff);
+  border: 1px solid #dbeafe;
+}
+
+.heroLeft {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.successIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pendingIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.warningIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.errorIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.heroSubtitle {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.heroPnr {
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.heroPnrLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.heroPnrValue {
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.statusTimeline {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.timelineDivider {
+  flex: 1;
+  height: 2px;
+  background: #dbeafe;
+}
+
+.timelineItemActive,
+.timelineItemPending {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.timelineItemActive {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.timelineItemPending {
+  background: #fef9c3;
+  color: #92400e;
+}
+
+.loadingBox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.loadingTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.loadingMessage {
+  margin-top: 2px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.loadingHint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.authBox {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.authText {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.refreshHint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #2563eb;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid #dbeafe;
+  border-top-color: #2563eb;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.flightCard {
+  margin-top: 26px;
+  padding: 28px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  overflow: hidden;
+  position: relative;
+}
+
+.flightTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.airlineBlock {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.airlineLogo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  background: white;
+  border-radius: 14px;
+  padding: 6px;
+}
+
+.airlineName {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.airlineClass {
+  opacity: 0.8;
+  margin-top: 4px;
+}
+
+.routeDate {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 36px;
+}
+
+.airport {
+  min-width: 120px;
+}
+
+.airportCode {
+  font-size: 48px;
+  font-weight: 900;
+}
+
+.airportTime {
+  margin-top: 6px;
+  opacity: 0.8;
+}
+
+.routeCenter {
+  flex: 1;
+  position: relative;
+}
+
+.routeLine {
+  height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.6),
+    rgba(255, 255, 255, 0.6) 10px,
+    transparent 10px,
+    transparent 18px
+  );
+}
+
+.routePlane {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.section {
+  margin-top: 34px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 18px;
+}
+
+.passengerGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+.passengerCard {
+  background: white;
+  border-radius: 22px;
+  border: 1px solid #e2e8f0;
+  padding: 22px;
+  transition: 0.2s ease;
+}
+
+.passengerCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.passengerTop {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.passengerIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+}
+
+.passengerName {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.passengerSeat {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.ticketNumber {
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.ticketActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.primaryButton,
+.secondaryButton,
+.primaryBigButton,
+.secondaryBigButton {
+  border: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.primaryButton {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.secondaryButton {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  font-weight: 700;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.primaryBigButton:hover,
+.secondaryBigButton:hover {
+  transform: translateY(-2px);
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.detailCard {
+  position: relative;
+  background: white;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  padding: 18px;
+}
+
+.detailLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.detailValue {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  word-break: break-all;
+}
+
+.copyButton {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: #eff6ff;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.bottomBar {
+  margin-top: 38px;
+  display: flex;
+  gap: 14px;
+}
+
+.primaryBigButton {
+  flex: 1;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.secondaryBigButton {
+  flex: 1;
+  height: 54px;
+  border-radius: 16px;
+  background: white;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.error {
+  padding: 18px;
+  border-radius: 14px;
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+@media (max-width: 768px) {
+  .card {
+    padding: 20px;
+  }
+
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .route {
+    gap: 12px;
+  }
+
+  .airportCode {
+    font-size: 34px;
+  }
+
+  .bottomBar {
+    position: sticky;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    padding-top: 12px;
+  }
+
+  .ticketActions {
+    flex-direction: column;
+  }
+}

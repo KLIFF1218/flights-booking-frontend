@@ -2,22 +2,26 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Plane, 
-  Calendar, 
+import {
+  LayoutDashboard,
+  Users,
+  Plane,
+  Calendar,
   Menu,
   X
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Пользователи', href: '/users', icon: Users },
-  { name: 'Бронирования', href: '/bookings', icon: Calendar },
-  { name: 'Рейсы', href: '/flights', icon: Plane },
-];
+  { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
+  { name: 'Flights', href: '/admin/flights', icon: Plane },
+] as const;
+
+function isNavItemActive(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -38,7 +42,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h1 className="text-xl font-semibold text-slate-900">AirBooking Admin</h1>
+          <h1 className="text-xl font-semibold text-slate-900">MaxAirline Admin</h1>
           <button 
             onClick={() => setSidebarOpen(false)}
             className="lg:hidden p-2 hover:bg-slate-100 rounded-lg"
@@ -48,7 +52,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="p-4 space-y-1">
           {navigation.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = isNavItemActive(pathname, item.href);
             return (
               <Link
                 key={item.name}
@@ -80,11 +84,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <div className="flex-1" />
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="text-sm font-medium text-slate-900">Администратор</p>
-                <p className="text-xs text-slate-500">admin@airbooking.ru</p>
+                <p className="text-sm font-medium text-slate-900">Administrator</p>
+                <p className="text-xs text-slate-500">admin@maxairline.ru</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
-                А
+                A
               </div>
             </div>
           </div>
