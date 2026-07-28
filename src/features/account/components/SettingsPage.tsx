@@ -262,7 +262,7 @@ export function SettingsPage() {
     };
 
     loadSettings();
-  }, [settingsInitialized, user]);
+  }, [settingsInitialized, user, locale]);
 
   return (
     <div className="flex-1">

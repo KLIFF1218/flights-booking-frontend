@@ -439,7 +439,19 @@ export default function BookingPage() {
     return () => {
       cancelled = true;
     };
-  }, [bookingId, reset, setFlight, setPricing, setOrder, setTravelers, isRouting, inactiveReason, t]);
+  }, [
+    bookingId,
+    reset,
+    setFlight,
+    setPricing,
+    setOrder,
+    setTravelers,
+    isRouting,
+    inactiveReason,
+    t,
+    locale,
+    tBuySheet,
+  ]);
 
   const proceedToSeats = useCallback(
     (travelersWithDbIds: TravelerForm[]) => {

@@ -18,7 +18,6 @@ import { FlightCardSkeleton } from "@/features/search/components/Skeleton/Flight
 import { FilterSidebar } from "@/features/search/components/Filters/FiltersSidebar";
 
 import type { PricedFlight } from "@/shared/types/flight";
-import { apiFetch } from "@/shared/api/apiClient";
 import { parseFlightSearchParams, parseSortFromSearchParams, getRouteSearchKey } from "@/features/search/utils/search-params";
 import {
   appendFiltersToSearchParams,

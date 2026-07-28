@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { User, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/lib/auth-store";
 import {
   createSavedPassenger,
@@ -17,10 +18,14 @@ function SavedPassengerCard({
   passenger,
   onDelete,
   deleting,
+  passportLabel,
+  deleteAriaLabel,
 }: {
   passenger: SavedPassengerProfile;
   onDelete: (id: string) => void;
   deleting: boolean;
+  passportLabel: string;
+  deleteAriaLabel: string;
 }) {
   return (
     <div className="relative flex flex-col items-center p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
@@ -29,14 +34,14 @@ function SavedPassengerCard({
         onClick={() => onDelete(passenger.id)}
         disabled={deleting}
         className="absolute top-2 right-2 p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
-        aria-label="Delete"
+        aria-label={deleteAriaLabel}
       >
         <Trash2 className="w-4 h-4" />
       </button>
       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
         <User className="w-8 h-8 text-gray-400" />
       </div>
-      <div className="text-xs text-gray-500 mb-1">Passport</div>
+      <div className="text-xs text-gray-500 mb-1">{passportLabel}</div>
       <div className="text-sm font-medium text-gray-900 text-center">
         {passenger.lastName} {passenger.firstName.charAt(0)}.
       </div>
@@ -45,6 +50,7 @@ function SavedPassengerCard({
 }
 
 export function DocumentsPage() {
+  const t = useTranslations("documents");
   const queryClient = useQueryClient();
   const authChecked = useAuthStore((state) => state.authChecked);
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
@@ -107,12 +113,12 @@ export function DocumentsPage() {
     setFormError(null);
 
     if (!lastName.trim() || !firstName.trim() || !birthDate || !docNumber.trim()) {
-      setFormError("Please fill in the required fields: full name, date of birth, and document number.");
+      setFormError(t("errors.requiredFields"));
       return;
     }
 
     if (!passportIssuanceDate || !passportExpiry) {
-      setFormError("Please provide the passport issue and expiry dates.");
+      setFormError(t("errors.passportDates"));
       return;
     }
 
@@ -130,7 +136,7 @@ export function DocumentsPage() {
       });
     } catch (error) {
       console.error(error);
-      setFormError("Failed to save the document. Please check the data and try again.");
+      setFormError(t("errors.saveFailed"));
     }
   };
 
@@ -138,16 +144,14 @@ export function DocumentsPage() {
 
   return (
     <div className="flex-1">
-      <h1 className="text-3xl font-bold mb-6">Documents</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("title")}</h1>
 
       <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Saved</h2>
+        <h2 className="text-xl font-semibold mb-4">{t("saved")}</h2>
         {passengersQuery.isLoading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
+          <p className="text-gray-500 text-sm">{t("loading")}</p>
         ) : passengers.length === 0 ? (
-          <p className="text-gray-500 text-sm">
-            No saved documents yet. Add your first one below.
-          </p>
+          <p className="text-gray-500 text-sm">{t("emptySaved")}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {passengers.map((passenger) => (
@@ -156,6 +160,8 @@ export function DocumentsPage() {
                 passenger={passenger}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 deleting={deleteMutation.isPending}
+                passportLabel={t("passport")}
+                deleteAriaLabel={t("deleteAria")}
               />
             ))}
           </div>
@@ -164,20 +170,20 @@ export function DocumentsPage() {
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold">New document</h2>
+          <h2 className="text-xl font-semibold">{t("newDocument")}</h2>
           <button
             type="button"
             onClick={handleClearForm}
             className="text-sm text-gray-600 hover:text-gray-900"
           >
-            Clear form
+            {t("clearForm")}
           </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <div>
             <label className="block text-sm text-gray-600 mb-2">
-              Citizenship (code)
+              {t("citizenship")}
             </label>
             <input
               type="text"
@@ -187,7 +193,7 @@ export function DocumentsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-2">Gender</label>
+            <label className="block text-sm text-gray-600 mb-2">{t("gender")}</label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -198,7 +204,7 @@ export function DocumentsPage() {
                     : "border-gray-300 text-gray-700 hover:border-gray-400"
                 }`}
               >
-                M
+                {t("genderMale")}
               </button>
               <button
                 type="button"
@@ -209,7 +215,7 @@ export function DocumentsPage() {
                     : "border-gray-300 text-gray-700 hover:border-gray-400"
                 }`}
               >
-                F
+                {t("genderFemale")}
               </button>
             </div>
           </div>
@@ -218,14 +224,14 @@ export function DocumentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
-            placeholder="Last name"
+            placeholder={t("lastName")}
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="text"
-            placeholder="First name"
+            placeholder={t("firstName")}
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -235,14 +241,14 @@ export function DocumentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             type="date"
-            placeholder="Date of birth"
+            aria-label={t("dateOfBirth")}
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="text"
-            placeholder="Document No."
+            placeholder={t("documentNumber")}
             value={docNumber}
             onChange={(e) => setDocNumber(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -252,14 +258,14 @@ export function DocumentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <input
             type="date"
-            placeholder="Date of issue"
+            aria-label={t("dateOfIssue")}
             value={passportIssuanceDate}
             onChange={(e) => setPassportIssuanceDate(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="date"
-            placeholder="Expiry date"
+            aria-label={t("expiryDate")}
             value={passportExpiry}
             onChange={(e) => setPassportExpiry(e.target.value)}
             className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -276,17 +282,13 @@ export function DocumentsPage() {
           disabled={createMutation.isPending}
           className="w-full sm:w-auto px-8 py-3 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors mb-4"
         >
-          {createMutation.isPending ? "Saving..." : "Add"}
+          {createMutation.isPending ? t("saving") : t("add")}
         </button>
 
         <div className="flex items-start justify-between pt-6 border-t border-gray-200">
           <div className="flex-1 pr-4">
-            <h3 className="font-semibold mb-1">
-              Save passenger data when purchasing
-            </h3>
-            <p className="text-sm text-gray-500">
-              This setting applies when placing an order on the website
-            </p>
+            <h3 className="font-semibold mb-1">{t("autoSaveTitle")}</h3>
+            <p className="text-sm text-gray-500">{t("autoSaveHint")}</p>
           </div>
           <button
             type="button"
