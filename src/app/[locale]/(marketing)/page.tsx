@@ -1,8 +1,5 @@
 import { PopularDestinations } from "@/components/PopularDestinations";
 import { Footer } from "@/components/Footer";
-import { Newsletter } from "@/components/Newsletter";
-import { AirlinePartners } from "@/components/AirlinePartners";
-import { Testimonials } from "@/components/Testimonials";
 import { HowItWorks } from "@/components/HowItWorks";
 import { WhyChooseUs } from "@/components/WhyChooseUs";
 import { Hero } from "@/components/Hero";
@@ -14,9 +11,6 @@ export default function HomePage() {
       <PopularDestinations />
       <WhyChooseUs />
       <HowItWorks />
-      <Testimonials />
-      <AirlinePartners />
-      <Newsletter />
       <Footer />
     </>
   );
