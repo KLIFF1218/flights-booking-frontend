@@ -85,7 +85,11 @@ export function AuthForm({
           });
 
     if (result.success) {
-      setSuccess(mode === "login" ? t("loginSuccess") : t("registerSuccess"));
+      if (mode === "register" && result.verificationEmailSent === false) {
+        setSuccess(t("registerSuccessVerificationSkipped"));
+      } else {
+        setSuccess(mode === "login" ? t("loginSuccess") : t("registerSuccess"));
+      }
       onSuccess?.();
       return;
     }

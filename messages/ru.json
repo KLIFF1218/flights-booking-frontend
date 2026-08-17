@@ -162,7 +162,9 @@
     "pricingError": "Не удалось загрузить цену",
     "updatingPrice": "Обновление цены…",
     "checkoutSummary": "Оплата",
-    "priceDetails": "Детализация"
+    "priceDetails": "Детализация",
+    "refreshPrice": "Обновить цену",
+    "backToSearch": "К поиску"
   },
   "settings": {
     "title": "Настройки",
@@ -211,7 +213,13 @@
     "passwordCurrentRequired": "Введите текущий пароль.",
     "passwordMismatch": "Пароли не совпадают.",
     "passwordSameAsCurrent": "Новый пароль должен отличаться от текущего.",
-    "passwordChangeFailed": "Не удалось сменить пароль."
+    "passwordChangeFailed": "Не удалось сменить пароль.",
+    "emailVerificationBannerTitle": "Подтвердите email, чтобы оплачивать бронирования.",
+    "emailVerificationBannerBody": "Мы отправили ссылку на {email}. Проверьте папку «Спам», если письма нет.",
+    "emailVerificationResend": "Отправить письмо снова",
+    "emailVerificationResending": "Отправляем…",
+    "emailVerificationResent": "Письмо для подтверждения отправлено.",
+    "emailVerificationResendFailed": "Не удалось отправить письмо для подтверждения."
   },
   "auth": {
     "loginTitle": "Вход",
@@ -234,6 +242,7 @@
     "passwordMismatch": "Пароли не совпадают.",
     "loginSuccess": "Вы успешно вошли",
     "registerSuccess": "Аккаунт создан",
+    "registerSuccessVerificationSkipped": "Аккаунт создан, но письмо для подтверждения не отправилось. Нажмите «Отправить письмо снова» в настройках аккаунта.",
     "authFailed": "Не удалось выполнить вход",
     "vkLoginFailed": "Не удалось войти через VK. Попробуйте ещё раз.",
     "confirmPassword": "Подтвердите пароль",
@@ -300,6 +309,15 @@
     "flightLeg": "Перелёт",
     "flightLegNumber": "Перелёт {number}",
     "missingSearchContext": "Данные поиска не найдены. Вернитесь к данным пассажиров.",
+    "searchSessionExpired": "Сессия поиска истекла. Начните новый поиск, чтобы продолжить бронирование.",
+    "expiry": {
+      "title": "Завершите бронирование вовремя",
+      "countdown": "Осталось: {time}",
+      "countdownMinutes": "{count} мин",
+      "countdownHours": "{hours} ч {minutes} мин",
+      "expired": "истекло"
+    },
+    "seatMapLoadFailed": "Не удалось загрузить карту мест. Попробуйте снова или вернитесь к поиску.",
     "selectSeatsIntro": "Выберите места для {count} пассажиров",
     "lapInfantSuffix": " ({count} младенец на руках без отдельного места)",
     "acrossSegments": " на {count} сегментах",

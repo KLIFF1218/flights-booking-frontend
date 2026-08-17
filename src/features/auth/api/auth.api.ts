@@ -9,6 +9,7 @@ export type AuthResponse = {
   accessToken: string;
   accessMaxAge: number;
   csrfToken: string;
+  verificationEmailSent?: boolean;
 };
 
 export type AuthCredentials = {
@@ -69,10 +70,13 @@ function applyAuthResponse(data: Record<string, unknown>): AuthResponse {
   }
 
   const accessMaxAge = data.accessMaxAge;
+  const verificationEmailSent = data.verificationEmailSent;
   return {
     accessToken,
     accessMaxAge: typeof accessMaxAge === "number" ? accessMaxAge : 0,
     csrfToken: typeof csrfToken === "string" ? csrfToken : "",
+    verificationEmailSent:
+      typeof verificationEmailSent === "boolean" ? verificationEmailSent : undefined,
   };
 }
 
@@ -136,11 +140,20 @@ export async function loginWithEmail(
   return establishSession(accessToken);
 }
 
+export type RegisterResult = {
+  user: User;
+  verificationEmailSent: boolean;
+};
+
 export async function registerWithEmail(
   credentials: AuthCredentials,
-): Promise<User> {
-  const { accessToken } = await postAuth("/auth/register", credentials);
-  return establishSession(accessToken);
+): Promise<RegisterResult> {
+  const auth = await postAuth("/auth/register", credentials);
+  const user = await establishSession(auth.accessToken);
+  return {
+    user,
+    verificationEmailSent: auth.verificationEmailSent !== false,
+  };
 }
 
 export type VkExchangePayload = {
