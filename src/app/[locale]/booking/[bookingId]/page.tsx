@@ -8,13 +8,18 @@ import { FormProvider, useForm, useWatch, type Resolver } from "react-hook-form"
 import { useBookingStore } from "@/features/booking/store/booking.store";
 import { TravelersForm } from "@/features/booking/components/TravelersForm/TravelersForm";
 import {
-  getBooking,
   confirmTravelers,
   mergeTravelersWithApiIds,
   mergeApiTravelersIntoFormSlots,
   restoreBookingSearchContext,
+  fetchFlightPricing,
   type BookingResponse,
 } from "@/features/booking/api/booking.api";
+import {
+  mapPricingResponseToFlight,
+  mapPricingResponseToState,
+} from "@/features/booking/lib/pricing.mapper";
+import { isSearchSessionExpiredError } from "@/features/booking/lib/booking-search-errors";
 import {
   fetchSavedPassengers,
   syncSavedPassengersSafely,
@@ -49,11 +54,16 @@ import {
 import { PriceSidebar } from "@/features/booking/components/PriceSidebar/PriceSidebar";
 import BookingLayout from "./BookingLayout";
 import { useBookingStatusGuard } from "@/features/booking/hooks/useBookingStatusGuard";
+import { useBookingExpiry } from "@/features/booking/hooks/useBookingExpiry";
+import { useBackToSearch } from "@/features/booking/hooks/useBackToSearch";
 import { BookingInactiveView } from "@/features/booking/components/BookingInactiveView/BookingInactiveView";
+import { BookingExpiryBanner } from "@/features/booking/components/BookingExpiryBanner/BookingExpiryBanner";
 import { resolveBookingLoadError } from "@/features/booking/lib/booking-errors";
 import { isInternationalItinerary } from "@/shared/utils/flight-route";
 import { mapSnapshotPriceToState } from "@/features/booking/lib/pricing.mapper";
 import { formatPassengerSummary } from "@/features/search/components/BuySheet/buy-sheet.utils";
+import { useSearchCurrency } from "@/features/search/hooks/useSearchCurrency";
+import { toCurrencyCode } from "@/shared/utils/currency";
 import { useLocale } from "next-intl";
 
 function mapTravelerTypeToForm(
@@ -194,9 +204,18 @@ export default function BookingPage() {
   const tValidation = useTranslations("booking.validation");
   const locale = useLocale();
 
-  const { isRouting, inactiveReason } = useBookingStatusGuard(bookingId, "travelers");
+  const { isRouting, inactiveReason, booking } = useBookingStatusGuard(bookingId, "travelers");
+  const {
+    countdown: bookingCountdown,
+    isExpired: bookingExpired,
+    isUrgent: bookingExpiryUrgent,
+  } = useBookingExpiry(bookingId, booking?.expiresAt);
+  const goBackToSearch = useBackToSearch(bookingId);
 
   const setFlight = useBookingStore((s) => s.setFlight);
+  const searchId = useBookingStore((s) => s.searchId);
+  const offerId = useBookingStore((s) => s.offerId);
+  const pricing = useBookingStore((s) => s.pricing);
   const setTravelers = useBookingStore((s) => s.setTravelers);
   const setPricing = useBookingStore((s) => s.setPricing);
   const setOrder = useBookingStore((s) => s.setOrder);
@@ -212,6 +231,9 @@ export default function BookingPage() {
   const [savedProfiles, setSavedProfiles] = useState<SavedPassengerProfile[]>([]);
   const [saveProfilesToAccount, setSaveProfilesToAccount] = useState(true);
   const [isInternationalFlight, setIsInternationalFlight] = useState(true);
+  const [pricingError, setPricingError] = useState<string | null>(null);
+  const [isRefreshingPrice, setIsRefreshingPrice] = useState(false);
+  const [searchSessionExpired, setSearchSessionExpired] = useState(false);
   const validationContextRef = useRef<TravelersValidationContext>({
     isInternational: true,
   });
@@ -304,7 +326,7 @@ export default function BookingPage() {
   }, [bookingId, router]);
 
   useEffect(() => {
-    if (isRouting || inactiveReason) {
+    if (isRouting || inactiveReason || !booking) {
       return;
     }
 
@@ -315,8 +337,6 @@ export default function BookingPage() {
       setLoadError(null);
 
       try {
-        const booking = await getBooking(bookingId);
-
         const snapshotSearchId = booking.snapshot.searchId;
         const snapshotOfferId =
           booking.snapshot.offerId ?? booking.snapshot.offer?.id;
@@ -433,13 +453,14 @@ export default function BookingPage() {
     }
 
     if (bookingId) {
-      loadBooking();
+      void loadBooking();
     }
 
     return () => {
       cancelled = true;
     };
   }, [
+    booking,
     bookingId,
     reset,
     setFlight,
@@ -542,6 +563,45 @@ export default function BookingPage() {
     proceedToSeats(travelersWithDbIds);
   }, [proceedToSeats]);
 
+  const searchCurrency = useSearchCurrency();
+  const pricingCurrency = toCurrencyCode(pricing?.currency ?? searchCurrency);
+
+  const handleRefreshPrice = useCallback(async () => {
+    if (!searchId || !offerId) {
+      setPricingError(t("missingSearchContext"));
+      return;
+    }
+
+    try {
+      setIsRefreshingPrice(true);
+      setPricingError(null);
+      setSearchSessionExpired(false);
+
+      const response = await fetchFlightPricing(searchId, offerId, {
+        fareBrand: pricing?.fareBrand,
+        currencyCode: pricingCurrency,
+        bookingId,
+      });
+
+      setFlight(mapPricingResponseToFlight(response, pricingCurrency));
+      setPricing(mapPricingResponseToState(response, pricingCurrency));
+    } catch (error) {
+      if (isSearchSessionExpiredError(error)) {
+        setSearchSessionExpired(true);
+        setPricingError(t("searchSessionExpired"));
+        return;
+      }
+
+      setPricingError(
+        error instanceof Error ? error.message : t("failedUpdatePrice"),
+      );
+    } finally {
+      setIsRefreshingPrice(false);
+    }
+  }, [bookingId, offerId, pricing?.fareBrand, pricingCurrency, searchId, setFlight, setPricing, t]);
+
+  const resolvedInactiveReason = inactiveReason ?? (bookingExpired ? "expired" : null);
+
   if (isRouting) {
     return (
       <BookingLayout
@@ -560,7 +620,7 @@ export default function BookingPage() {
     );
   }
 
-  if (inactiveReason) {
+  if (resolvedInactiveReason) {
     return (
       <BookingLayout
         sidebar={
@@ -571,7 +631,7 @@ export default function BookingPage() {
           />
         }
       >
-        <BookingInactiveView reason={inactiveReason} />
+        <BookingInactiveView reason={resolvedInactiveReason} bookingId={bookingId} />
       </BookingLayout>
     );
   }
@@ -582,9 +642,20 @@ export default function BookingPage() {
         sidebar={
           <PriceSidebar
             onContinue={handleSubmit}
-            disabled={isPageLoading || isSubmitting || Boolean(loadError)}
+            onRefreshPrice={handleRefreshPrice}
+            onBackToSearch={goBackToSearch}
+            showBackToSearch={searchSessionExpired}
+            disabled={
+              isPageLoading ||
+              isSubmitting ||
+              Boolean(loadError) ||
+              searchSessionExpired ||
+              bookingExpired
+            }
             isLoading={isSubmitting}
+            isPricingLoading={isRefreshingPrice}
             isInitialLoading={isPageLoading}
+            pricingError={pricingError}
           />
         }
       >
@@ -592,6 +663,11 @@ export default function BookingPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {t("checkout")}
           </h1>
+
+          <BookingExpiryBanner
+            countdown={bookingCountdown}
+            urgent={bookingExpiryUrgent}
+          />
 
           {isPageLoading && (
             <div className="space-y-4 py-4" aria-busy="true">
@@ -606,7 +682,7 @@ export default function BookingPage() {
               <p className="mb-3">⚠️ {loadError}</p>
               <button
                 type="button"
-                onClick={() => router.push("/")}
+                onClick={goBackToSearch}
                 className="text-sm font-medium text-red-700 underline hover:text-red-900"
               >
                 {t("backToSearch")}
