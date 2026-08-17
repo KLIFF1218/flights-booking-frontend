@@ -1,13 +1,5 @@
 import type { PaymentTransaction, PaymentUiPhase } from "../types/payment.types";
 
-const TERMINAL_TRANSACTION_STATUSES = new Set(["SUCCEED", "FAILED", "CANCELED"]);
-const TERMINAL_BOOKING_STATUSES = new Set([
-  "TICKETED",
-  "FAILED",
-  "EXPIRED",
-  "CANCELED",
-]);
-
 type PaymentPhaseTranslator = (
   key: string,
   values?: Record<string, string | number>,
@@ -85,24 +77,7 @@ export function shouldPollTransaction(
     return true;
   }
 
-  const phase = resolvePaymentUiPhase(transaction);
-
-  if (isTerminalPaymentPhase(phase)) {
-    return false;
-  }
-
-  if (TERMINAL_TRANSACTION_STATUSES.has(transaction.status)) {
-    return transaction.bookingStatus !== "TICKETING";
-  }
-
-  if (
-    transaction.bookingStatus &&
-    TERMINAL_BOOKING_STATUSES.has(transaction.bookingStatus)
-  ) {
-    return false;
-  }
-
-  return true;
+  return !isTerminalPaymentPhase(resolvePaymentUiPhase(transaction));
 }
 
 function getPhaseTranslationKey(phase: PaymentUiPhase): string {
