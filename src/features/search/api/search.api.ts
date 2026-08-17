@@ -1,4 +1,5 @@
 import { apiFetch } from "@/shared/api/apiClient";
+import { isSearchSessionExpiredError } from "@/features/booking/lib/booking-search-errors";
 import type { FlightCardResponse } from "@/shared/types/search-response";
 import type { ParsedFlightSearchParams } from "@/features/search/utils/search-params";
 import type {
@@ -76,18 +77,7 @@ export function extractCursorFromLink(link: string | null): string | null {
   }
 }
 
-export function isSearchSessionExpiredError(error: unknown): boolean {
-  if (!(error instanceof Error)) {
-    return false;
-  }
-
-  const message = error.message.toLowerCase();
-  return (
-    message.includes("404") ||
-    message.includes("search expired") ||
-    message.includes("not found")
-  );
-}
+export { isSearchSessionExpiredError } from "@/features/booking/lib/booking-search-errors";
 
 export async function createFlightSearch(
   search: ParsedFlightSearchParams,
