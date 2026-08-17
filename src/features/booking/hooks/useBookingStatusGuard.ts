@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
-import { getBooking } from "@/features/booking/api/booking.api";
+import {
+  getBooking,
+  type BookingResponse,
+} from "@/features/booking/api/booking.api";
 import {
   getInactiveBookingReason,
   isBookingStepAllowed,
@@ -21,6 +24,7 @@ export function useBookingStatusGuard(
   const [isRouting, setIsRouting] = useState(true);
   const [inactiveReason, setInactiveReason] =
     useState<BookingInactiveReason | null>(null);
+  const [booking, setBooking] = useState<BookingResponse | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,19 +33,21 @@ export function useBookingStatusGuard(
       if (!bookingId) {
         setIsRouting(false);
         setInactiveReason(null);
+        setBooking(null);
         return;
       }
 
       setIsRouting(true);
       setInactiveReason(null);
+      setBooking(null);
 
       try {
-        const booking = await getBooking(bookingId);
+        const nextBooking = await getBooking(bookingId);
         if (cancelled) {
           return;
         }
 
-        const status = booking.status as BookingStatus;
+        const status = nextBooking.status as BookingStatus;
 
         if (!isBookingStepAllowed(status, currentStep)) {
           const inactive = getInactiveBookingReason(status);
@@ -52,9 +58,11 @@ export function useBookingStatusGuard(
           }
 
           router.replace(resolveBookingRoute(bookingId, status));
+          setIsRouting(false);
           return;
         }
 
+        setBooking(nextBooking);
         setIsRouting(false);
       } catch {
         if (!cancelled) {
@@ -71,5 +79,5 @@ export function useBookingStatusGuard(
     };
   }, [bookingId, currentStep, router]);
 
-  return { isRouting, inactiveReason };
+  return { isRouting, inactiveReason, booking };
 }

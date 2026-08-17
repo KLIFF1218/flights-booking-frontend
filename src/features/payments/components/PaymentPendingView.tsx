@@ -8,7 +8,7 @@ import { useRequireAuth } from "@/features/auth/hooks/useRequireAuth";
 import { resumeBookingPayment } from "@/features/account/api/user-bookings.api";
 import { useCancelBooking } from "@/features/account/hooks/useCancelBooking";
 import { getCancelBookingCopy } from "@/features/account/lib/booking-navigation";
-import { getBooking } from "@/features/booking/api/booking.api";
+import type { BookingResponse } from "@/features/booking/api/booking.api";
 import { useBookingStatusGuard } from "@/features/booking/hooks/useBookingStatusGuard";
 import { fetchTransactionStatus } from "@/features/payments/api/payments.api";
 import { resolvePaymentUiPhase } from "@/features/payments/lib/payment-status";
@@ -53,7 +53,7 @@ export function PaymentPendingView({ bookingId }: Props) {
   const tCancel = useTranslations("orders.cancel");
   const tActions = useTranslations("orders.actions");
   const { isChecking, isReady } = useRequireAuth();
-  const { isRouting } = useBookingStatusGuard(bookingId, "payment");
+  const { isRouting, booking: guardBooking } = useBookingStatusGuard(bookingId, "payment");
   const cancelMutation = useCancelBooking();
   const cancelCopy = getCancelBookingCopy("PAYMENT_PENDING", tCancel);
 
@@ -67,13 +67,11 @@ export function PaymentPendingView({ bookingId }: Props) {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string | null>(null);
 
-  const loadPaymentState = useCallback(async () => {
+  const loadPaymentState = useCallback(async (booking: BookingResponse) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const booking = await getBooking(bookingId);
-
       const txId = booking.transaction?.id;
       if (!txId) {
         setError(tPending("sessionNotFound"));
@@ -113,15 +111,15 @@ export function PaymentPendingView({ bookingId }: Props) {
     } finally {
       setIsLoading(false);
     }
-  }, [bookingId, router, tPending]);
+  }, [router, tPending]);
 
   useEffect(() => {
-    if (!isReady) {
+    if (!isReady || isRouting || !guardBooking) {
       return;
     }
 
-    void loadPaymentState();
-  }, [isReady, loadPaymentState]);
+    void loadPaymentState(guardBooking);
+  }, [guardBooking, isReady, isRouting, loadPaymentState]);
 
   useEffect(() => {
     if (!expiresAt) {
