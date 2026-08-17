@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Drawer } from "vaul";
 import styles from "./BuySheet.module.css";
 import { formatPrice } from "@/shared/utils/formatPrice";
@@ -21,12 +22,9 @@ import {
 import { IndicativePriceBadge } from "@/features/booking/components/IndicativePriceBadge/IndicativePriceBadge";
 import type { FareBrandCode } from "@/features/booking/types/pricing.types";
 import { useSearchCurrency } from "@/features/search/hooks/useSearchCurrency";
-import { getCurrency, setCurrency } from "@/shared/utils/currency";
+import { getCurrency } from "@/shared/utils/currency";
 import { pluralMessageKey } from "@/shared/utils/plural-message";
 import { ApiRequestError } from "@/shared/api/apiClient";
-import { PaymentMethodSelector } from "@/features/payments/components/PaymentMethodSelector/PaymentMethodSelector";
-import type { PaymentProviderCode } from "@/features/payments/types/payment-provider";
-import { currencyForPaymentProvider } from "@/features/payments/utils/payment-provider-policy";
 import { FlightLegSummary } from "./FlightLegSummary";
 import {
   formatPassengerSummary,
@@ -56,6 +54,8 @@ export function BuySheet({
   isLoading = false,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.toString();
   const t = useTranslations("buySheet");
   const tSearch = useTranslations("search");
   const locale = useLocale();
@@ -71,7 +71,6 @@ export function BuySheet({
   const setSeatMaps = useBookingStore((s) => s.setSeatMaps);
   const setPricing = useBookingStore((s) => s.setPricing);
   const paymentProvider = useBookingStore((s) => s.paymentProvider);
-  const setPaymentProvider = useBookingStore((s) => s.setPaymentProvider);
   const authChecked = useAuthStore((state) => state.authChecked);
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,37 +136,6 @@ export function BuySheet({
     }
   }
 
-  async function handlePaymentProviderChange(provider: PaymentProviderCode) {
-    if (!searchId || !offerId || provider === paymentProvider || brandLoading) {
-      return;
-    }
-
-    const nextCurrency = currencyForPaymentProvider(provider, searchCurrency);
-    setPaymentProvider(provider);
-
-    if (nextCurrency !== searchCurrency) {
-      setCurrency(nextCurrency);
-    }
-
-    setBrandLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetchFlightPricing(searchId, offerId, {
-        fareBrand: selectedBrand,
-        currencyCode: nextCurrency,
-      });
-      setFlight(mapPricingResponseToFlight(response, nextCurrency));
-      setPricing(mapPricingResponseToState(response, nextCurrency));
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : t("fareUpdateFailed");
-      setError(message);
-    } finally {
-      setBrandLoading(false);
-    }
-  }
-
   const continueBooking = useCallback(async () => {
     if (!displayFlight || !searchId || !offerId) {
       setError(t("searchLost"));
@@ -183,7 +151,12 @@ export function BuySheet({
     setError(null);
 
     try {
-      const booking = await initBooking(searchId, offerId, paymentProvider);
+      const booking = await initBooking(
+        searchId,
+        offerId,
+        paymentProvider,
+        searchQuery,
+      );
 
       onOpenChange(false);
       setTravelers([]);
@@ -212,6 +185,7 @@ export function BuySheet({
     setSeats,
     setTravelers,
     paymentProvider,
+    searchQuery,
     t,
   ]);
 
@@ -412,11 +386,6 @@ export function BuySheet({
                     </div>
                   )}
 
-                  <PaymentMethodSelector
-                    value={paymentProvider}
-                    onChange={handlePaymentProviderChange}
-                    disabled={isSubmitting || quoteExpired || brandLoading}
-                  />
                 </div>
 
                 <div className={styles.footer}>

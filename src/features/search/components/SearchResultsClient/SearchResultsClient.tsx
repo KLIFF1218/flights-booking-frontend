@@ -32,6 +32,7 @@ import {
   type FlightSortOption,
   isSearchSessionExpiredError,
 } from "@/features/search/api/search.api";
+import { persistLastSearchQuery } from "@/features/search/utils/search-navigation";
 
 import { ArrowUp } from "lucide-react";
 
@@ -80,6 +81,14 @@ export function SearchResultsClient() {
   );
   const hasValidSearchParams = parsedSearch !== null;
   const searchCurrency = useSearchCurrency();
+
+  useEffect(() => {
+    if (!hasValidSearchParams || !searchQueryKey) {
+      return;
+    }
+
+    persistLastSearchQuery(searchQueryKey);
+  }, [hasValidSearchParams, searchQueryKey]);
 
   const { sessionQuery, resultsQuery, searchId: sessionSearchId, refreshSearch } = useFlightSearch({
     parsedSearch,

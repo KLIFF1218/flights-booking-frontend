@@ -3,15 +3,18 @@
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import type { BookingInactiveReason } from "@/features/booking/hooks/useBookingStatusGuard";
+import { useBackToSearch } from "@/features/booking/hooks/useBackToSearch";
 
 type Props = {
   reason: BookingInactiveReason;
   title?: string;
+  bookingId?: string;
 };
 
-export function BookingInactiveView({ reason, title }: Props) {
+export function BookingInactiveView({ reason, title, bookingId }: Props) {
   const t = useTranslations("booking");
   const router = useRouter();
+  const goBackToSearch = useBackToSearch(bookingId);
 
   return (
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6 lg:p-8">
@@ -25,7 +28,7 @@ export function BookingInactiveView({ reason, title }: Props) {
         <div className="flex flex-wrap gap-4">
           <button
             type="button"
-            onClick={() => router.push("/search")}
+            onClick={goBackToSearch}
             className="text-sm font-medium text-red-700 underline hover:text-red-900"
           >
             {t("backToSearch")}
