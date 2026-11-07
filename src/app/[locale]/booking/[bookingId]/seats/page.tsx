@@ -226,7 +226,7 @@ export default function SeatsPage() {
           );
         }
       } catch {
-        // Redirect logic handles missing travelers.
+        // Hydration is optional; the seats page still renders without prefilled travelers.
       } finally {
         if (!cancelled) {
           setIsHydratingTravelers(false);

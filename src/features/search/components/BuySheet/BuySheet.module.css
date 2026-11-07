@@ -307,8 +307,6 @@
   margin: 0;
 }
 
-/* FlightLegSummary */
-
 .legSection {
   display: flex;
   flex-direction: column;
