@@ -37,14 +37,18 @@ function formatPassengers(
   t: ReturnType<typeof useTranslations<"search">>,
 ) {
   const total = getPassengerTotal(passengers);
-  const label =
-    total === 1 ? t("passenger_one") : t("passenger_other");
+  const label = total === 1 ? t("passenger_one") : t("passenger_other");
   return `${total} ${label}, ${formatTravelClassLabel(travelClass, (key) => t(key))}`;
 }
 
-function toNumber(value: string | null, fallback: number) {
+function toNumber(value: string | null, fallback: number): number {
+  if (value === null || value.trim() === "") {
+    return fallback;
+  }
+
   const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
+
+  return Number.isSafeInteger(n) ? n : fallback;
 }
 
 type HeroSearchProps = {
@@ -176,7 +180,9 @@ function HeroSearchForm({
       return t("departure");
     }
 
-    const departureLabel = format(departureDate, "d MMM", { locale: dateFnsLocale });
+    const departureLabel = format(departureDate, "d MMM", {
+      locale: dateFnsLocale,
+    });
     if (!returnDate) {
       return departureLabel;
     }
@@ -259,14 +265,14 @@ function HeroSearchForm({
           disabled={isPending}
           aria-busy={isPending}
         >
-            {isPending ? (
-              <>
-                <Loader2 className={styles.spinner} />
-                {t("searching")}
-              </>
-            ) : (
-              t("searchFlights")
-            )}
+          {isPending ? (
+            <>
+              <Loader2 className={styles.spinner} />
+              {t("searching")}
+            </>
+          ) : (
+            t("searchFlights")
+          )}
         </button>
       </div>
 
