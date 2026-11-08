@@ -22,12 +22,10 @@ export function stripLeadingLocale(pathname: string): string {
 export function getLocaleFromPathname(pathname: string): AppLocale {
   const segment = pathname.split("/")[1];
 
-  if (
-    segment &&
-    routing.locales.includes(segment as AppLocale) &&
-    segment !== routing.defaultLocale
-  ) {
-    return segment as AppLocale;
+  const locale = routing.locales.find((locale) => locale === segment);
+
+  if (locale && locale !== routing.defaultLocale) {
+    return locale;
   }
 
   return routing.defaultLocale;
