@@ -61,13 +61,16 @@ function runAuthGuard(request: NextRequest): NextResponse | null {
   const cookieHeader = request.headers.get("cookie") ?? undefined;
   const hasSession = hasRefreshSessionCookie(cookieHeader);
 
-  if (pathWithoutLocale.startsWith("/auth/login")) {
+  if (pathWithoutLocale === "/auth/login") {
     if (!hasSession) {
       return null;
     }
 
     const returnUrl = request.nextUrl.searchParams.get("returnUrl");
-    const destination = sanitizeReturnUrl(returnUrl, stripLeadingLocale(pathname));
+    const destination = sanitizeReturnUrl(
+      returnUrl,
+      stripLeadingLocale(pathname),
+    );
     const locale = getLocaleFromPathname(pathname);
     const localizedDestination =
       locale === routing.defaultLocale
