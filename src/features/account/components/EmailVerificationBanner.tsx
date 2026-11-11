@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/lib/auth-store";
 import {
   AuthError,
-  loadCurrentUser,
   resendEmailVerification,
 } from "@/features/auth/api/auth.api";
 
@@ -27,7 +26,6 @@ export function EmailVerificationBanner() {
     try {
       await resendEmailVerification();
       setMessage(t("emailVerificationResent"));
-      await loadCurrentUser().catch(() => undefined);
     } catch (error) {
       setMessageIsError(true);
       setMessage(
@@ -53,13 +51,13 @@ export function EmailVerificationBanner() {
           disabled={loading}
           className="text-sm font-medium underline disabled:opacity-60"
         >
-          {loading ? t("emailVerificationResending") : t("emailVerificationResend")}
+          {loading
+            ? t("emailVerificationResending")
+            : t("emailVerificationResend")}
         </button>
         {message ? (
           <span
-            className={
-              messageIsError ? "text-red-800" : "text-amber-900/80"
-            }
+            className={messageIsError ? "text-red-800" : "text-amber-900/80"}
           >
             {message}
           </span>
