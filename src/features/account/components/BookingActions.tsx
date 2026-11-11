@@ -21,7 +21,10 @@ type BookingActionsProps = {
   compact?: boolean;
 };
 
-export function BookingActions({ booking, compact = false }: BookingActionsProps) {
+export function BookingActions({
+  booking,
+  compact = false,
+}: BookingActionsProps) {
   const router = useRouter();
   const tActions = useTranslations("orders.actions");
   const tCancel = useTranslations("orders.cancel");
@@ -52,11 +55,11 @@ export function BookingActions({ booking, compact = false }: BookingActionsProps
   };
 
   const handleResume = async () => {
+    setResumeError(null);
+
     if (!resumePath) {
       return;
     }
-
-    setResumeError(null);
 
     if (booking.status === "PAYMENT_PENDING") {
       setIsResuming(true);
@@ -66,7 +69,9 @@ export function BookingActions({ booking, compact = false }: BookingActionsProps
         window.location.href = payment.paymentRedirectUrl;
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : tActions("startPaymentFailed");
+          error instanceof Error
+            ? error.message
+            : tActions("startPaymentFailed");
 
         if (message.toLowerCase().includes("payment window has expired")) {
           router.push("/search");
@@ -141,7 +146,9 @@ export function BookingActions({ booking, compact = false }: BookingActionsProps
               disabled={cancelMutation.isPending || isBusy}
               className={`${buttonClass} border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50`}
             >
-              {cancelMutation.isPending ? tActions("canceling") : tActions("cancel")}
+              {cancelMutation.isPending
+                ? tActions("canceling")
+                : tActions("cancel")}
             </button>
           )}
         </div>
