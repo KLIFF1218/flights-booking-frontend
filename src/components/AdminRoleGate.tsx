@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "@/i18n/navigation";
 import { loadCurrentUser } from "@/features/auth/api/auth.api";
 import { useAuthStore } from "@/lib/auth-store";
 import {
@@ -15,6 +16,7 @@ type GateStatus = "checking" | "redirecting" | "denied" | "ready";
  * Enforces ADMIN via live /users/me (never trusts fb_role or persisted role).
  */
 export function AdminRoleGate({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const setAuthChecked = useAuthStore((state) => state.setAuthChecked);
   const [status, setStatus] = useState<GateStatus>("checking");
   const startedRef = useRef(false);
@@ -47,7 +49,7 @@ export function AdminRoleGate({ children }: { children: React.ReactNode }) {
 
         if (profile.role !== "ADMIN") {
           setStatus("denied");
-          window.location.assign("/");
+          router.replace("/");
           return;
         }
 
@@ -69,7 +71,7 @@ export function AdminRoleGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [setAuthChecked]);
+  }, [router, setAuthChecked]);
 
   if (status === "ready") {
     return <>{children}</>;
@@ -85,7 +87,9 @@ export function AdminRoleGate({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center text-sm text-slate-500">
-      {status === "redirecting" ? "Redirecting to sign in…" : "Checking admin access…"}
+      {status === "redirecting"
+        ? "Redirecting to sign in…"
+        : "Checking admin access…"}
     </div>
   );
 }
