@@ -7,9 +7,8 @@ export function AuthCookieBootstrap() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Legacy keys from older clients that stored JWTs in localStorage.
-    localStorage.removeItem("accessToken");
     try {
+      localStorage.removeItem("accessToken");
       const raw = localStorage.getItem("auth-storage");
       if (raw) {
         const parsed = JSON.parse(raw) as { state?: Record<string, unknown> };
@@ -18,10 +17,11 @@ export function AuthCookieBootstrap() {
           localStorage.setItem("auth-storage", JSON.stringify(parsed));
         }
       }
-    } catch {
-      // ignore
-    }
-    syncAuthSessionCookiesFromStorage();
+    } catch {}
+
+    try {
+      syncAuthSessionCookiesFromStorage();
+    } catch {}
   }, []);
 
   return null;
