@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAuthStore } from "@/lib/auth-store";
 import {
   clearAuthData,
@@ -19,8 +19,7 @@ function hasClientSessionHint(): boolean {
   }
 
   return (
-    hasAuthSession(document.cookie) ||
-    hasRefreshSessionCookie(document.cookie)
+    hasAuthSession(document.cookie) || hasRefreshSessionCookie(document.cookie)
   );
 }
 
@@ -32,10 +31,7 @@ function shouldRebootstrapAuthOnPageShow(event: PageTransitionEvent): boolean {
   const { authChecked, isAuthorized } = useAuthStore.getState();
 
   return (
-    authChecked &&
-    !isAuthorized &&
-    !getAccessToken() &&
-    hasClientSessionHint()
+    authChecked && !isAuthorized && !getAccessToken() && hasClientSessionHint()
   );
 }
 
@@ -44,8 +40,12 @@ export function AuthInitializer() {
   const isLoading = useAuthStore((state) => state.isLoading);
   const setIsLoading = useAuthStore((state) => state.setIsLoading);
   const setAuthChecked = useAuthStore((state) => state.setAuthChecked);
+  const inFlightRef = useRef(false);
 
   const bootstrapAuth = useCallback(async () => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+
     setIsLoading(true);
 
     try {
@@ -66,6 +66,7 @@ export function AuthInitializer() {
     } catch {
       clearAuthData();
     } finally {
+      inFlightRef.current = false;
       setAuthChecked(true);
       setIsLoading(false);
     }
