@@ -243,7 +243,15 @@
     "togglePassword": "Toggle password visibility",
     "agreement": "By continuing, you agree to the Terms and Privacy Policy.",
     "passwordPolicy": "Password must be 8–128 characters and include at least one letter and one number",
-    "close": "Close"
+    "close": "Close",
+
+    "verifyEmailTitle": "Email verification",
+    "verifyEmailVerifying": "Verifying your email…",
+    "verifyEmailSuccess": "Email verified. You can continue booking.",
+    "verifyEmailFailed": "Verification failed. The link may have expired.",
+    "verifyEmailMissingToken": "Verification token is missing.",
+    "verifyEmailGoToSignIn": "Go to sign in",
+    "verifyEmailAccountSettings": "Account settings"
   },
   "booking": {
     "travelerDetails": "Traveler details",
