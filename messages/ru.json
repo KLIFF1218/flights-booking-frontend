@@ -255,7 +255,15 @@
     "togglePassword": "Показать или скрыть пароль",
     "agreement": "Продолжая, вы соглашаетесь с Условиями и Политикой конфиденциальности.",
     "passwordPolicy": "Пароль: 8–128 символов, минимум одна буква и одна цифра",
-    "close": "Закрыть"
+    "close": "Закрыть",
+
+    "verifyEmailTitle": "Подтверждение email",
+    "verifyEmailVerifying": "Проверяем ваш email…",
+    "verifyEmailSuccess": "Email подтверждён. Можно продолжать бронирование.",
+    "verifyEmailFailed": "Не удалось подтвердить email. Возможно, ссылка устарела.",
+    "verifyEmailMissingToken": "Токен подтверждения отсутствует.",
+    "verifyEmailGoToSignIn": "Перейти ко входу",
+    "verifyEmailAccountSettings": "Настройки аккаунта"
   },
   "booking": {
     "travelerDetails": "Данные пассажиров",
