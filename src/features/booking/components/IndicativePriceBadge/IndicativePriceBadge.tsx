@@ -13,15 +13,21 @@ type IndicativePriceBadgeProps = {
 
 export function IndicativePriceBadge({
   pricing = null,
-  showCheckoutNote = false,
-  className = "",
-  noteClassName = "",
+  ...rest
 }: IndicativePriceBadgeProps) {
-  const t = useTranslations("results");
-
   if (!isIndicativePricing(pricing)) {
     return null;
   }
+
+  return <IndicativePriceBadgeContent {...rest} />;
+}
+
+function IndicativePriceBadgeContent({
+  showCheckoutNote = false,
+  className = "",
+  noteClassName = "",
+}: Omit<IndicativePriceBadgeProps, "pricing">) {
+  const t = useTranslations("results");
 
   return (
     <div className={className}>
