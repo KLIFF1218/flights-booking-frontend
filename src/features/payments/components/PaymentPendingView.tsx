@@ -53,7 +53,10 @@ export function PaymentPendingView({ bookingId }: Props) {
   const tCancel = useTranslations("orders.cancel");
   const tActions = useTranslations("orders.actions");
   const { isChecking, isReady } = useRequireAuth();
-  const { isRouting, booking: guardBooking } = useBookingStatusGuard(bookingId, "payment");
+  const { isRouting, booking: guardBooking } = useBookingStatusGuard(
+    bookingId,
+    "payment",
+  );
   const cancelMutation = useCancelBooking();
   const cancelCopy = getCancelBookingCopy("PAYMENT_PENDING", tCancel);
 
@@ -67,51 +70,54 @@ export function PaymentPendingView({ bookingId }: Props) {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<string | null>(null);
 
-  const loadPaymentState = useCallback(async (booking: BookingResponse) => {
-    setIsLoading(true);
-    setError(null);
+  const loadPaymentState = useCallback(
+    async (booking: BookingResponse) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const txId = booking.transaction?.id;
-      if (!txId) {
-        setError(tPending("sessionNotFound"));
-        return;
+      try {
+        const txId = booking.transaction?.id;
+        if (!txId) {
+          setError(tPending("sessionNotFound"));
+          return;
+        }
+
+        setTransactionId(txId);
+
+        if (booking.transaction?.paymentExpiresAt) {
+          setExpiresAt(new Date(booking.transaction.paymentExpiresAt));
+        }
+
+        const transaction = await fetchTransactionStatus(txId);
+        const phase = resolvePaymentUiPhase(transaction);
+
+        if (phase === "ticketed" || phase === "ticketing") {
+          router.replace(`/payment/${txId}/success`);
+          return;
+        }
+
+        if (
+          phase === "booking_expired" ||
+          phase === "booking_canceled" ||
+          phase === "payment_canceled"
+        ) {
+          setError(tPending("sessionInactive"));
+          return;
+        }
+
+        setPnr(transaction.booking?.pnr ?? null);
+      } catch (loadError) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : tPending("loadFailed"),
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      setTransactionId(txId);
-
-      if (booking.transaction?.paymentExpiresAt) {
-        setExpiresAt(new Date(booking.transaction.paymentExpiresAt));
-      }
-
-      const transaction = await fetchTransactionStatus(txId);
-      const phase = resolvePaymentUiPhase(transaction);
-
-      if (phase === "ticketed" || phase === "ticketing") {
-        router.replace(`/payment/${txId}/success`);
-        return;
-      }
-
-      if (
-        phase === "booking_expired" ||
-        phase === "booking_canceled" ||
-        phase === "payment_canceled"
-      ) {
-        setError(tPending("sessionInactive"));
-        return;
-      }
-
-      setPnr(transaction.booking?.pnr ?? null);
-    } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : tPending("loadFailed"),
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [router, tPending]);
+    },
+    [router, tPending],
+  );
 
   useEffect(() => {
     if (!isReady || isRouting || !guardBooking) {
@@ -135,13 +141,7 @@ export function PaymentPendingView({ bookingId }: Props) {
     return () => window.clearInterval(timer);
   }, [expiresAt, tPending]);
 
-  const isExpired = useMemo(() => {
-    if (!expiresAt) {
-      return false;
-    }
-
-    return expiresAt.getTime() <= Date.now();
-  }, [expiresAt]);
+  const isExpired = expiresAt ? expiresAt.getTime() <= Date.now() : false;
 
   const handlePay = async () => {
     setIsPaying(true);
@@ -207,7 +207,9 @@ export function PaymentPendingView({ bookingId }: Props) {
 
               <div>
                 <div className={styles.heroTitle}>{tPending("title")}</div>
-                <div className={styles.heroSubtitle}>{tPending("subtitle")}</div>
+                <div className={styles.heroSubtitle}>
+                  {tPending("subtitle")}
+                </div>
               </div>
             </div>
 
