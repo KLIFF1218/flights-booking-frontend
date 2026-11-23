@@ -26,13 +26,21 @@ export function PaymentCanceledView({ transactionId }: Props) {
       return;
     }
 
+    if (!transactionId) {
+      setBookingId(null);
+      setIsLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     async function loadTransaction() {
       try {
         const transaction = await fetchTransactionStatus(transactionId);
         if (!cancelled) {
-          setBookingId(transaction.bookingId || transaction.booking?.id || null);
+          setBookingId(
+            transaction.bookingId || transaction.booking?.id || null,
+          );
         }
       } catch {
         if (!cancelled) {
