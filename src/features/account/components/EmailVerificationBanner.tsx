@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/lib/auth-store";
 import {
@@ -14,6 +14,13 @@ export function EmailVerificationBanner() {
   const [message, setMessage] = useState<string | null>(null);
   const [messageIsError, setMessageIsError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   if (!user?.email || user.emailVerifiedAt) {
     return null;
@@ -25,8 +32,10 @@ export function EmailVerificationBanner() {
     setMessageIsError(false);
     try {
       await resendEmailVerification();
+      if (!mountedRef.current) return;
       setMessage(t("emailVerificationResent"));
     } catch (error) {
+      if (!mountedRef.current) return;
       setMessageIsError(true);
       setMessage(
         error instanceof AuthError
@@ -34,7 +43,9 @@ export function EmailVerificationBanner() {
           : t("emailVerificationResendFailed"),
       );
     } finally {
-      setLoading(false);
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   };
 
