@@ -23,9 +23,14 @@ export async function fetchAllUserBookings(): Promise<UserBookingsResult> {
   const first = await fetchUserBookingsPage(1, 50);
   const bookings: UserBooking[] = [...first.bookings];
 
-  const pagesToFetch = Math.min(first.totalPages, MAX_PAGES);
+  const totalPages = Number.isFinite(first.totalPages) ? first.totalPages : 1;
+  const pagesToFetch = Math.min(totalPages, MAX_PAGES);
+
   for (let page = 2; page <= pagesToFetch; page += 1) {
     const next = await fetchUserBookingsPage(page, 50);
+    if (next.bookings.length === 0) {
+      break;
+    }
     bookings.push(...next.bookings);
   }
 
