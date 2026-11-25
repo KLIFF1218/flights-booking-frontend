@@ -17,12 +17,18 @@ export function NotificationStreamListener() {
   const pathname = usePathname();
   const authChecked = useAuthStore((state) => state.authChecked);
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
-  const setConnected = useNotificationStreamStore((state) => state.setConnected);
+  const setConnected = useNotificationStreamStore(
+    (state) => state.setConnected,
+  );
   const queryClient = useQueryClient();
   const streamEnabled = isRealtimeNotificationPath(pathname);
 
   useEffect(() => {
-    if (!authChecked || !isAuthorized || !streamEnabled) {
+    if (!authChecked) {
+      return;
+    }
+
+    if (!isAuthorized || !streamEnabled) {
       setConnected(false);
       return;
     }
@@ -35,8 +41,12 @@ export function NotificationStreamListener() {
           return;
         }
 
-        queryClient.invalidateQueries({ queryKey: USER_NOTIFICATIONS_QUERY_KEY });
-        queryClient.invalidateQueries({ queryKey: USER_NOTIFICATIONS_UNREAD_COUNT_KEY });
+        queryClient.invalidateQueries({
+          queryKey: USER_NOTIFICATIONS_QUERY_KEY,
+        });
+        queryClient.invalidateQueries({
+          queryKey: USER_NOTIFICATIONS_UNREAD_COUNT_KEY,
+        });
       },
     });
 
