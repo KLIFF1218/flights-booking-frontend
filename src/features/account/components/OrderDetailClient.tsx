@@ -95,7 +95,10 @@ function OrderStatusBanner({ booking }: { booking: UserBooking }) {
         </p>
         <p className="mt-1">
           {t("inactiveText")}{" "}
-          <Link href="/search" className="font-medium text-blue-600 hover:underline">
+          <Link
+            href="/search"
+            className="font-medium text-blue-600 hover:underline"
+          >
             {t("searchNewFlights")}
           </Link>
         </p>
@@ -128,12 +131,32 @@ export function OrderDetailClient({ bookingId }: { bookingId: string }) {
       return;
     }
 
-    if (window.location.hash === "#tickets") {
-      document.getElementById("tickets")?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
+    if (window.location.hash !== "#tickets") {
+      return;
     }
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const tryScroll = () => {
+      if (cancelled) return;
+      const el = document.getElementById("tickets");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        window.requestAnimationFrame(tryScroll);
+      }
+    };
+
+    tryScroll();
+
+    return () => {
+      cancelled = true;
+    };
   }, [booking]);
 
   if (loading) {
@@ -148,7 +171,9 @@ export function OrderDetailClient({ bookingId }: { bookingId: string }) {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-        <p className="text-red-700">{tOrders("error", { message: error.message })}</p>
+        <p className="text-red-700">
+          {tOrders("error", { message: error.message })}
+        </p>
       </div>
     );
   }
