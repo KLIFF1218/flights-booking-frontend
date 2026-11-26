@@ -52,6 +52,11 @@ export function AuthForm({
 
   const handleEmailSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    if (emailLoading) {
+      return;
+    }
+
     setError(null);
     setSuccess(null);
 
@@ -123,7 +128,9 @@ export function AuthForm({
       ) : (
         <>
           <h2 className={styles.title}>
-            {mode === "login" ? t("dialogLoginTitle") : t("dialogRegisterTitle")}
+            {mode === "login"
+              ? t("dialogLoginTitle")
+              : t("dialogRegisterTitle")}
           </h2>
           <p className={styles.description}>{t("dialogDescription")}</p>
         </>
@@ -166,7 +173,9 @@ export function AuthForm({
             placeholder={t("password")}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            autoComplete={
+              mode === "login" ? "current-password" : "new-password"
+            }
             required
           />
           <button
@@ -246,9 +255,7 @@ export function AuthForm({
         {vkLoading ? t("vkLoading") : t("vkSignIn")}
       </button>
 
-      {!isPage ? (
-        <p className={styles.agreement}>{t("agreement")}</p>
-      ) : null}
+      {!isPage ? <p className={styles.agreement}>{t("agreement")}</p> : null}
     </div>
   );
 }
