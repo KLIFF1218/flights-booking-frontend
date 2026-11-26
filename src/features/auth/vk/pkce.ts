@@ -4,11 +4,20 @@ function toBase64Url(bytes: Uint8Array): string {
     binary += String.fromCharCode(bytes[i]!);
   }
 
-  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
 
 /** RFC 7636 code_verifier: 43–128 chars from unreserved URI set. */
 export function generateCodeVerifier(length = 64): string {
+  if (!Number.isInteger(length) || length < 43 || length > 128) {
+    throw new RangeError(
+      "code_verifier length must be an integer between 43 and 128",
+    );
+  }
+
   const chars =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   const bytes = new Uint8Array(length);
