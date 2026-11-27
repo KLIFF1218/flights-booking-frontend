@@ -33,7 +33,10 @@ function IndicativePriceBadgeContent({
     <div className={className}>
       <span>{t("indicativePrice")}</span>
       {showCheckoutNote && (
-        <span className={noteClassName}>{t("indicativeCheckoutNote")}</span>
+        <>
+          {" "}
+          <span className={noteClassName}>{t("indicativeCheckoutNote")}</span>
+        </>
       )}
     </div>
   );
