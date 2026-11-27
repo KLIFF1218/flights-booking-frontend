@@ -22,8 +22,6 @@ export function BookingExpiryBanner({ countdown, urgent = false }: Props) {
           ? "border-amber-300 bg-amber-50 text-amber-950"
           : "border-blue-200 bg-blue-50 text-blue-950"
       }`}
-      role="status"
-      aria-live="polite"
     >
       <Clock3 className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
       <div>
