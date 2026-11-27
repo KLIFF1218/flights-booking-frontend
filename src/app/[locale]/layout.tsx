@@ -11,6 +11,9 @@ import { LocaleHtmlLang } from "@/components/LocaleHtmlLang";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { routing, type AppLocale } from "@/i18n/routing";
 
+const isLocale = (value: string): value is AppLocale =>
+  (routing.locales as readonly string[]).includes(value);
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -24,7 +27,7 @@ export default async function LocaleLayout({
 }) {
   const { locale } = await params;
 
-  if (!routing.locales.includes(locale as AppLocale)) {
+  if (!isLocale(locale)) {
     notFound();
   }
 

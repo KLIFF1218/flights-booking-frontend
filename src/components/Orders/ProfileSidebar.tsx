@@ -4,11 +4,10 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Settings, Bell, FileText, Package } from "lucide-react";
 
-import { useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { stripLeadingLocale } from "@/i18n/path";
 
 export function ProfileSidebar() {
-  const router = useRouter();
   const pathname = usePathname();
   const pathWithoutLocale = stripLeadingLocale(pathname ?? "/");
   const t = useTranslations("nav");
@@ -49,9 +48,9 @@ export function ProfileSidebar() {
               pathWithoutLocale.startsWith("/my/notifications"));
 
           return (
-            <button
+            <Link
               key={item.href}
-              onClick={() => router.push(item.href)}
+              href={item.href}
               className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors whitespace-nowrap text-sm sm:text-base ${
                 isActive
                   ? "bg-blue-50 text-blue-600 font-medium"
@@ -60,7 +59,7 @@ export function ProfileSidebar() {
             >
               <Icon className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
               <span>{item.label}</span>
-            </button>
+            </Link>
           );
         })}
       </nav>

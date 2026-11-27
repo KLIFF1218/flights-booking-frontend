@@ -150,7 +150,9 @@
     "pricingError": "Could not load price",
     "updatingPrice": "Updating price…",
     "checkoutSummary": "Checkout",
-    "priceDetails": "Price details"
+    "priceDetails": "Price details",
+    "refreshPrice": "Refresh price",
+    "backToSearch": "Back to search"
   },
   "settings": {
     "title": "Settings",
@@ -199,7 +201,13 @@
     "passwordCurrentRequired": "Enter your current password.",
     "passwordMismatch": "Passwords do not match.",
     "passwordSameAsCurrent": "New password must be different from the current password.",
-    "passwordChangeFailed": "Could not change password."
+    "passwordChangeFailed": "Could not change password.",
+    "emailVerificationBannerTitle": "Verify your email to complete payments.",
+    "emailVerificationBannerBody": "We sent a link to {email}. Check spam if you do not see it.",
+    "emailVerificationResend": "Resend verification email",
+    "emailVerificationResending": "Sending…",
+    "emailVerificationResent": "Verification email sent.",
+    "emailVerificationResendFailed": "Could not resend verification email."
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -222,6 +230,7 @@
     "passwordMismatch": "Passwords do not match.",
     "loginSuccess": "Signed in successfully",
     "registerSuccess": "Account created successfully",
+    "registerSuccessVerificationSkipped": "Account created, but we could not send the verification email. Use “Resend verification email” in account settings.",
     "authFailed": "Authentication failed",
     "vkLoginFailed": "VK login failed. Please try again.",
     "confirmPassword": "Confirm password",
@@ -234,7 +243,15 @@
     "togglePassword": "Toggle password visibility",
     "agreement": "By continuing, you agree to the Terms and Privacy Policy.",
     "passwordPolicy": "Password must be 8–128 characters and include at least one letter and one number",
-    "close": "Close"
+    "close": "Close",
+
+    "verifyEmailTitle": "Email verification",
+    "verifyEmailVerifying": "Verifying your email…",
+    "verifyEmailSuccess": "Email verified. You can continue booking.",
+    "verifyEmailFailed": "Verification failed. The link may have expired.",
+    "verifyEmailMissingToken": "Verification token is missing.",
+    "verifyEmailGoToSignIn": "Go to sign in",
+    "verifyEmailAccountSettings": "Account settings"
   },
   "booking": {
     "travelerDetails": "Traveler details",
@@ -288,6 +305,15 @@
     "flightLeg": "Flight",
     "flightLegNumber": "Flight {number}",
     "missingSearchContext": "Search data not found. Please go back to passenger details.",
+    "searchSessionExpired": "Your search session has expired. Start a new search to continue booking.",
+    "expiry": {
+      "title": "Complete your booking in time",
+      "countdown": "Time remaining: {time}",
+      "countdownMinutes": "{count} min",
+      "countdownHours": "{hours} h {minutes} min",
+      "expired": "expired"
+    },
+    "seatMapLoadFailed": "Could not load the seat map. Try again or return to search.",
     "selectSeatsIntro": "Select seats for {count} passengers",
     "lapInfantSuffix": " ({count} lap infant without a separate seat)",
     "acrossSegments": " across {count} segments",

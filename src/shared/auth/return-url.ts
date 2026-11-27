@@ -1,18 +1,24 @@
+import { stripLeadingLocale } from "@/i18n/path";
+
 export function sanitizeReturnUrl(
   returnUrl: string | null | undefined,
   fallback = "/",
 ): string {
   if (!returnUrl) {
-    return fallback;
+    return stripLeadingLocale(fallback);
   }
 
   if (!returnUrl.startsWith("/") || returnUrl.startsWith("//")) {
-    return fallback;
+    return stripLeadingLocale(fallback);
   }
 
   if (returnUrl.includes("://") || returnUrl.includes("\\")) {
-    return fallback;
+    return stripLeadingLocale(fallback);
   }
 
-  return returnUrl;
+  const queryIndex = returnUrl.indexOf("?");
+  const pathname = queryIndex === -1 ? returnUrl : returnUrl.slice(0, queryIndex);
+  const query = queryIndex === -1 ? "" : returnUrl.slice(queryIndex);
+
+  return `${stripLeadingLocale(pathname)}${query}`;
 }

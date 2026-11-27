@@ -9,6 +9,7 @@ import {
   resolveInitBookingIdempotencyKey,
 } from "@/features/booking/lib/booking-init-idempotency";
 import type { PaymentProviderCode } from "@/features/payments/types/payment-provider";
+import { persistLastSearchQuery } from "@/features/search/utils/search-navigation";
 
 export type SeatSelection = {
   travelerId: string;
@@ -72,12 +73,14 @@ export type SeatMapUi = {
 export async function getSeatmap(
   searchId: string,
   offerId: string,
+  bookingId?: string,
 ): Promise<SeatMapResponse> {
   return apiFetch<SeatMapResponse>("/seatmaps/by-offer", {
     method: "POST",
     body: JSON.stringify({
       searchId,
       offerId,
+      ...(bookingId ? { bookingId } : {}),
     }),
   });
 }
@@ -88,34 +91,45 @@ export type InitBookingResponse = {
 
 const BOOKING_SEARCH_CONTEXT_KEY = "booking-search-context";
 
+type BookingSearchContext = {
+  bookingId: string;
+  searchId: string;
+  offerId: string;
+  searchQuery?: string;
+};
+
 export function persistBookingSearchContext(
   bookingId: string,
   searchId: string,
   offerId: string,
+  searchQuery?: string,
 ) {
   if (typeof window === "undefined") return;
 
-  sessionStorage.setItem(
-    BOOKING_SEARCH_CONTEXT_KEY,
-    JSON.stringify({ bookingId, searchId, offerId }),
-  );
+  const payload: BookingSearchContext = {
+    bookingId,
+    searchId,
+    offerId,
+    ...(searchQuery?.trim() ? { searchQuery: searchQuery.trim() } : {}),
+  };
+
+  sessionStorage.setItem(BOOKING_SEARCH_CONTEXT_KEY, JSON.stringify(payload));
+
+  if (searchQuery?.trim()) {
+    persistLastSearchQuery(searchQuery);
+  }
 }
 
-export function restoreBookingSearchContext(bookingId: string): {
-  searchId: string;
-  offerId: string;
-} | null {
+function readBookingSearchContext(
+  bookingId: string,
+): BookingSearchContext | null {
   if (typeof window === "undefined") return null;
 
   try {
     const raw = sessionStorage.getItem(BOOKING_SEARCH_CONTEXT_KEY);
     if (!raw) return null;
 
-    const parsed = JSON.parse(raw) as {
-      bookingId?: string;
-      searchId?: string;
-      offerId?: string;
-    };
+    const parsed = JSON.parse(raw) as Partial<BookingSearchContext>;
 
     if (
       parsed.bookingId !== bookingId ||
@@ -125,10 +139,32 @@ export function restoreBookingSearchContext(bookingId: string): {
       return null;
     }
 
-    return { searchId: parsed.searchId, offerId: parsed.offerId };
+    return {
+      bookingId: parsed.bookingId,
+      searchId: parsed.searchId,
+      offerId: parsed.offerId,
+      searchQuery: parsed.searchQuery,
+    };
   } catch {
     return null;
   }
+}
+
+export function getBookingSearchQuery(bookingId: string): string | null {
+  const context = readBookingSearchContext(bookingId);
+  return context?.searchQuery?.trim() ? context.searchQuery : null;
+}
+
+export function restoreBookingSearchContext(bookingId: string): {
+  searchId: string;
+  offerId: string;
+} | null {
+  const context = readBookingSearchContext(bookingId);
+  if (!context) {
+    return null;
+  }
+
+  return { searchId: context.searchId, offerId: context.offerId };
 }
 
 const INIT_BOOKING_IN_PROGRESS_MAX_ATTEMPTS = 5;
@@ -144,6 +180,7 @@ export async function initBooking(
   searchId: string,
   offerId: string,
   paymentProvider?: PaymentProviderCode,
+  searchQuery?: string,
 ): Promise<InitBookingResponse> {
   const idempotencyKey = resolveInitBookingIdempotencyKey(searchId, offerId);
 
@@ -161,7 +198,7 @@ export async function initBooking(
         }),
       });
 
-      persistBookingSearchContext(booking.id, searchId, offerId);
+      persistBookingSearchContext(booking.id, searchId, offerId, searchQuery);
       clearInitBookingIdempotencyKey(searchId, offerId);
 
       return booking;
@@ -216,6 +253,7 @@ export async function fetchFlightPricing(
     seatedInfants?: number;
     fareBrand?: "LIGHT" | "FLEX";
     currencyCode?: CurrencyCode;
+    bookingId?: string;
   },
 ): Promise<FlightPricingApiResponse> {
   const {
@@ -259,6 +297,7 @@ export interface BookingResponse {
   status: string;
   totalPrice: number | string;
   currency: string;
+  expiresAt?: string;
   snapshot: BookingSnapshot;
   travelers?: BookingTravelerResponse[];
   transaction?: {

@@ -12,6 +12,7 @@ export function LoginPageClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnUrl = sanitizeReturnUrl(searchParams.get("returnUrl"));
+  const authChecked = useAuthStore((state) => state.authChecked);
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
   const accessToken = useAuthStore((state) => state.accessToken);
 
@@ -20,17 +21,15 @@ export function LoginPageClient() {
   }, []);
 
   useEffect(() => {
+    if (!authChecked) return;
     if (!isAuthorized && !accessToken) return;
     router.replace(returnUrl);
-  }, [isAuthorized, accessToken, router, returnUrl]);
+  }, [authChecked, isAuthorized, accessToken, router, returnUrl]);
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-md border p-6">
-        <AuthForm
-          variant="page"
-          onSuccess={() => router.replace(returnUrl)}
-        />
+        <AuthForm variant="page" onSuccess={() => router.replace(returnUrl)} />
       </div>
     </div>
   );

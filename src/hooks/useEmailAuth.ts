@@ -15,6 +15,7 @@ interface AuthResult {
   success: boolean;
   user?: User | null;
   error?: string;
+  verificationEmailSent?: boolean;
 }
 
 function toAuthResult(
@@ -48,7 +49,18 @@ export function useEmailAuth() {
   async function register(credentials: AuthCredentials): Promise<AuthResult> {
     setLoading(true);
     try {
-      return await toAuthResult(() => registerWithEmail(credentials));
+      const { user, verificationEmailSent } = await registerWithEmail(credentials);
+      return { success: true, user, verificationEmailSent };
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error:
+          error instanceof AuthError
+            ? error.message
+            : error instanceof Error
+              ? error.message
+              : "Unexpected error during authentication",
+      };
     } finally {
       setLoading(false);
     }

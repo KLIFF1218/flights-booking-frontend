@@ -23,7 +23,9 @@ export type UserNotification = {
 };
 
 export async function fetchUnreadNotificationCount(): Promise<number> {
-  const result = await apiFetch<{ count: number }>("/users/me/notifications/unread-count");
+  const result = await apiFetch<{ count: number }>(
+    "/users/me/notifications/unread-count",
+  );
   return result.count;
 }
 
@@ -46,10 +48,13 @@ export async function fetchUserNotifications(options?: {
   return apiFetch<UserNotification[]>(`/users/me/notifications${suffix}`);
 }
 
-export async function markNotificationRead(notificationId: string): Promise<UserNotification> {
-  return apiFetch<UserNotification>(`/users/me/notifications/${notificationId}/read`, {
-    method: "PATCH",
-  });
+export async function markNotificationRead(
+  notificationId: string,
+): Promise<UserNotification> {
+  return apiFetch<UserNotification>(
+    `/users/me/notifications/${encodeURIComponent(notificationId)}/read`,
+    { method: "PATCH" },
+  );
 }
 
 export async function markAllNotificationsRead(): Promise<{ updated: number }> {

@@ -27,6 +27,8 @@ import { ChevronDown } from "lucide-react";
 
 type PriceSidebarProps = {
   onContinue?: () => void;
+  onRefreshPrice?: () => void;
+  onBackToSearch?: () => void;
   disabled?: boolean;
   isLoading?: boolean;
   isPricingLoading?: boolean;
@@ -36,12 +38,15 @@ type PriceSidebarProps = {
   paymentProvider?: PaymentProviderCode;
   onPaymentProviderChange?: (provider: PaymentProviderCode) => void;
   showPaymentMethod?: boolean;
+  showBackToSearch?: boolean;
   /** Checkout on seats page: compact layout without sticky positioning. */
   variant?: "default" | "checkout";
 };
 
 export function PriceSidebar({
   onContinue,
+  onRefreshPrice,
+  onBackToSearch,
   disabled,
   isLoading,
   isPricingLoading,
@@ -51,6 +56,7 @@ export function PriceSidebar({
   paymentProvider,
   onPaymentProviderChange,
   showPaymentMethod = false,
+  showBackToSearch = false,
   variant = "default",
 }: PriceSidebarProps) {
   const t = useTranslations("priceSidebar");
@@ -275,21 +281,47 @@ export function PriceSidebar({
           <PaymentMethodSelector
             value={paymentProvider}
             onChange={onPaymentProviderChange}
-            disabled={disabled || isPricingLoading || isLoading}
+            disabled={disabled || isPricingLoading || isLoading || showBackToSearch}
             compact={isCheckout}
             className="mt-4 mb-1"
           />
         )}
 
+        {quoteExpired && onRefreshPrice && !showBackToSearch ? (
+          <button
+            type="button"
+            onClick={onRefreshPrice}
+            disabled={isPricingLoading || isLoading}
+            className="w-full mt-4 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base shadow-sm"
+          >
+            {isPricingLoading ? t("updatingPrice") : t("refreshPrice")}
+          </button>
+        ) : null}
+
         {onContinue && (
           <button
-            disabled={disabled || isPricingLoading || quoteExpired}
+            disabled={
+              disabled ||
+              isPricingLoading ||
+              quoteExpired ||
+              showBackToSearch
+            }
             onClick={onContinue}
             className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base shadow-sm"
           >
             {isLoading ? t("continue") : (buttonLabel ?? t("continue"))}
           </button>
         )}
+
+        {showBackToSearch && onBackToSearch ? (
+          <button
+            type="button"
+            onClick={onBackToSearch}
+            className="w-full mt-3 border border-gray-300 bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-4 rounded-xl transition-colors duration-200 text-sm sm:text-base"
+          >
+            {t("backToSearch")}
+          </button>
+        ) : null}
       </div>
     </aside>
   );

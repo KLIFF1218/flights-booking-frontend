@@ -112,7 +112,12 @@ export function DocumentsPage() {
   const handleSubmit = async () => {
     setFormError(null);
 
-    if (!lastName.trim() || !firstName.trim() || !birthDate || !docNumber.trim()) {
+    if (
+      !lastName.trim() ||
+      !firstName.trim() ||
+      !birthDate ||
+      !docNumber.trim()
+    ) {
       setFormError(t("errors.requiredFields"));
       return;
     }
@@ -159,7 +164,10 @@ export function DocumentsPage() {
                 key={passenger.id}
                 passenger={passenger}
                 onDelete={(id) => deleteMutation.mutate(id)}
-                deleting={deleteMutation.isPending}
+                deleting={
+                  deleteMutation.isPending &&
+                  deleteMutation.variables === passenger.id
+                }
                 passportLabel={t("passport")}
                 deleteAriaLabel={t("deleteAria")}
               />
@@ -193,7 +201,9 @@ export function DocumentsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-2">{t("gender")}</label>
+            <label className="block text-sm text-gray-600 mb-2">
+              {t("gender")}
+            </label>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -272,9 +282,7 @@ export function DocumentsPage() {
           />
         </div>
 
-        {formError && (
-          <p className="text-sm text-red-600 mb-4">{formError}</p>
-        )}
+        {formError && <p className="text-sm text-red-600 mb-4">{formError}</p>}
 
         <button
           type="button"

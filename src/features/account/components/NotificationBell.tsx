@@ -29,8 +29,11 @@ export function NotificationBell() {
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
   const [open, setOpen] = useState(false);
   const notificationsEnabled = authChecked && isAuthorized;
-  const { unreadCount, isError: unreadCountError, refetch: refetchUnreadCount } =
-    useUnreadNotificationCount({ enabled: notificationsEnabled });
+  const {
+    unreadCount,
+    isError: unreadCountError,
+    refetch: refetchUnreadCount,
+  } = useUnreadNotificationCount({ enabled: notificationsEnabled });
   const { notifications, loading } = useUserNotifications({
     unreadOnly: true,
     limit: 8,
@@ -64,9 +67,7 @@ export function NotificationBell() {
   }
 
   const ariaLabel =
-    badgeCount > 0
-      ? `Notifications, ${badgeCount} unread`
-      : "Notifications";
+    badgeCount > 0 ? `Notifications, ${badgeCount} unread` : "Notifications";
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
@@ -92,9 +93,12 @@ export function NotificationBell() {
           align="end"
           sideOffset={8}
           collisionPadding={12}
+          aria-labelledby="notifications-popover-title"
         >
           <div className={styles.header}>
-            <h3 className={styles.title}>Notifications</h3>
+            <h3 id="notifications-popover-title" className={styles.title}>
+              Notifications
+            </h3>
             {badgeCount > 0 && (
               <span className={styles.count}>{badgeCount} unread</span>
             )}

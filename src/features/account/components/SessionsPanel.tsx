@@ -9,10 +9,7 @@ import {
   type AuthSession,
 } from "@/features/auth/api/auth.api";
 import { clearAuthData } from "@/shared/api/apiClient";
-import {
-  formatDeviceLabel,
-  formatSessionIp,
-} from "@/shared/utils/user-agent";
+import { formatDeviceLabel, formatSessionIp } from "@/shared/utils/user-agent";
 import { useRouter } from "next/navigation";
 
 function formatWhen(value: string): string {
@@ -88,6 +85,7 @@ export function SessionsPanel() {
           ? err.message
           : "Failed to sign out everywhere",
       );
+    } finally {
       setBusyId(null);
     }
   };
@@ -96,9 +94,12 @@ export function SessionsPanel() {
     <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
         <div>
-          <h2 className="text-xl font-semibold mb-1">Where you&apos;re logged in</h2>
+          <h2 className="text-xl font-semibold mb-1">
+            Where you&apos;re logged in
+          </h2>
           <p className="text-sm text-gray-500">
-            Active sessions on your account. Revoke any device you do not recognize.
+            Active sessions on your account. Revoke any device you do not
+            recognize.
           </p>
         </div>
         <button

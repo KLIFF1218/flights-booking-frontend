@@ -9,7 +9,6 @@ import { useBookingStore } from "@/features/booking/store/booking.store";
 import {
   confirmSeatsAndPay,
   fetchFlightPricing,
-  getBooking,
   getSeatmap,
   mergeApiTravelersIntoFormSlots,
   restoreBookingSearchContext,
@@ -29,7 +28,10 @@ import {
   mapPricingResponseToState,
 } from "@/features/booking/lib/pricing.mapper";
 import { useBookingStatusGuard } from "@/features/booking/hooks/useBookingStatusGuard";
+import { useBookingExpiry } from "@/features/booking/hooks/useBookingExpiry";
+import { useBackToSearch } from "@/features/booking/hooks/useBackToSearch";
 import { BookingInactiveView } from "@/features/booking/components/BookingInactiveView/BookingInactiveView";
+import { BookingExpiryBanner } from "@/features/booking/components/BookingExpiryBanner/BookingExpiryBanner";
 import { useSearchCurrency } from "@/features/search/hooks/useSearchCurrency";
 import { toCurrencyCode, setCurrency } from "@/shared/utils/currency";
 import {
@@ -42,6 +44,10 @@ import {
   getSeatMapSegmentLabelById,
 } from "@/features/booking/lib/seat-map-labels";
 import { formatCabinLabel } from "@/shared/utils/travel-class";
+import {
+  isSearchSessionExpiredError,
+  resolveSeatMapLoadFailure,
+} from "@/features/booking/lib/booking-search-errors";
 import type { CabinClass } from "@/shared/types/search-response";
 
 type AssignedSeats = Record<string, Record<string, string>>;
@@ -133,10 +139,18 @@ export default function SeatsPage() {
   const searchCurrency = useSearchCurrency();
   const pricingCurrency = toCurrencyCode(pricing?.currency ?? searchCurrency);
 
-  const { isRouting, inactiveReason } = useBookingStatusGuard(bookingId, "seats");
+  const { isRouting, inactiveReason, booking: guardBooking } = useBookingStatusGuard(bookingId, "seats");
+  const {
+    countdown: bookingCountdown,
+    isExpired: bookingExpired,
+    isUrgent: bookingExpiryUrgent,
+  } = useBookingExpiry(bookingId, guardBooking?.expiresAt);
+  const goBackToSearch = useBackToSearch(bookingId);
 
   const [seatMaps, setSeatMaps] = useState<SeatMapSegment[]>([]);
   const [seatMapUnavailable, setSeatMapUnavailable] = useState(false);
+  const [searchSessionExpired, setSearchSessionExpired] = useState(false);
+  const [seatMapLoadError, setSeatMapLoadError] = useState<string | null>(null);
   const [assignedSeats, setAssignedSeats] = useState<AssignedSeats>({});
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const pricingRequestIdRef = useRef(0);
@@ -159,6 +173,10 @@ export default function SeatsPage() {
   const lapInfantCount = travelers.filter(isLapInfant).length;
 
   useEffect(() => {
+    if (isRouting) {
+      return;
+    }
+
     let cancelled = false;
 
     async function hydrateTravelers() {
@@ -176,8 +194,15 @@ export default function SeatsPage() {
         return;
       }
 
+      if (!guardBooking) {
+        if (!cancelled) {
+          setIsHydratingTravelers(false);
+        }
+        return;
+      }
+
       try {
-        const booking = await getBooking(bookingId);
+        const booking = guardBooking;
         if (cancelled) return;
 
         const travelerPricings =
@@ -201,7 +226,7 @@ export default function SeatsPage() {
           );
         }
       } catch {
-        // Redirect logic handles missing travelers.
+        // Hydration is optional; the seats page still renders without prefilled travelers.
       } finally {
         if (!cancelled) {
           setIsHydratingTravelers(false);
@@ -214,7 +239,7 @@ export default function SeatsPage() {
     return () => {
       cancelled = true;
     };
-  }, [bookingId, travelers.length, setTravelers]);
+  }, [bookingId, guardBooking, isRouting, travelers.length, setTravelers]);
 
   useEffect(() => {
     const storedFlight = loadBookingFlight(bookingId);
@@ -255,9 +280,12 @@ export default function SeatsPage() {
     async function loadSeatMaps() {
       setIsSeatMapsLoading(true);
       setBookingError(null);
+      setSeatMapUnavailable(false);
+      setSearchSessionExpired(false);
+      setSeatMapLoadError(null);
 
       try {
-        const data = await getSeatmap(searchId!, offerId!);
+        const data = await getSeatmap(searchId!, offerId!, bookingId);
 
         if (data.unavailable) {
           setSeatMapUnavailable(true);
@@ -267,9 +295,17 @@ export default function SeatsPage() {
 
         setSeatMapUnavailable(false);
         setSeatMaps(data.seatMaps ?? []);
-      } catch {
-        setSeatMapUnavailable(true);
+      } catch (error) {
         setSeatMaps([]);
+        setSeatMapUnavailable(false);
+
+        if (resolveSeatMapLoadFailure(error) === "search_expired") {
+          setSearchSessionExpired(true);
+          setPricingError(t("searchSessionExpired"));
+          return;
+        }
+
+        setSeatMapLoadError(t("seatMapLoadFailed"));
       } finally {
         setIsSeatMapsLoading(false);
       }
@@ -281,7 +317,7 @@ export default function SeatsPage() {
     }
 
     setIsSeatMapsLoading(false);
-  }, [searchId, offerId]);
+  }, [searchId, offerId, bookingId, t]);
 
   useEffect(() => {
     if (!seatableTravelerIndexes.length) return;
@@ -316,6 +352,67 @@ export default function SeatsPage() {
     [bookingId, pricingCurrency, setPricing, setFlight],
   );
 
+  const handlePricingError = useCallback(
+    (error: unknown) => {
+      if (isSearchSessionExpiredError(error)) {
+        setSearchSessionExpired(true);
+        setPricingError(t("searchSessionExpired"));
+        return;
+      }
+
+      setPricingError(
+        error instanceof Error ? error.message : t("failedUpdatePrice"),
+      );
+    },
+    [t],
+  );
+
+  const handleRefreshPrice = useCallback(async () => {
+    if (!searchId || !offerId) {
+      setPricingError(t("missingSearchContext"));
+      return;
+    }
+
+    const seatsPayload = buildSeatsPayload(travelers, seatMaps, assignedSeats);
+    const checkoutCurrency = currencyForPaymentProvider(
+      paymentProvider,
+      searchCurrency,
+    );
+
+    try {
+      setIsRecalculating(true);
+      setPricingError(null);
+      setSearchSessionExpired(false);
+      setSeatMapLoadError(null);
+
+      const data = await fetchFlightPricing(searchId, offerId, {
+        seats: seatsPayload.length > 0 ? seatsPayload : undefined,
+        fareBrand: pricing?.fareBrand,
+        currencyCode: checkoutCurrency,
+        bookingId,
+      });
+
+      applyPricingQuote(data);
+    } catch (error) {
+      handlePricingError(error);
+    } finally {
+      setIsRecalculating(false);
+    }
+  }, [
+    applyPricingQuote,
+    assignedSeats,
+    bookingId,
+    handlePricingError,
+    offerId,
+    paymentProvider,
+    pricing?.fareBrand,
+    searchCurrency,
+    searchId,
+    seatMaps,
+    t,
+    travelers,
+  ]);
+
   useEffect(() => {
     if (
       currencySyncDoneRef.current ||
@@ -349,12 +446,11 @@ export default function SeatsPage() {
         const data = await fetchFlightPricing(searchId, offerId, {
           seats: seatsPayload.length > 0 ? seatsPayload : undefined,
           currencyCode: targetCurrency,
+          bookingId,
         });
         applyPricingQuote(data);
       } catch (error) {
-        setPricingError(
-          error instanceof Error ? error.message : t("failedUpdatePrice"),
-        );
+        handlePricingError(error);
       } finally {
         setIsRecalculating(false);
       }
@@ -362,6 +458,7 @@ export default function SeatsPage() {
   }, [
     applyPricingQuote,
     assignedSeats,
+    handlePricingError,
     isHydratingPricing,
     offerId,
     paymentProvider,
@@ -390,6 +487,7 @@ export default function SeatsPage() {
         const data = await fetchFlightPricing(searchId!, offerId!, {
           seats: seatsPayload,
           currencyCode: searchCurrency,
+          bookingId,
         });
 
         if (requestId !== pricingRequestIdRef.current) {
@@ -402,18 +500,14 @@ export default function SeatsPage() {
           return;
         }
 
-        setPricingError(
-          error instanceof Error
-            ? error.message
-            : t("failedUpdatePrice"),
-        );
+        handlePricingError(error);
       } finally {
         if (requestId === pricingRequestIdRef.current) {
           setIsRecalculating(false);
         }
       }
     },
-    [travelers, searchId, offerId, applyPricingQuote, searchCurrency, t],
+    [travelers, searchId, offerId, bookingId, applyPricingQuote, searchCurrency, handlePricingError],
   );
 
   const handlePaymentProviderChange = useCallback(
@@ -438,15 +532,12 @@ export default function SeatsPage() {
         const data = await fetchFlightPricing(searchId, offerId, {
           seats: seatsPayload.length > 0 ? seatsPayload : undefined,
           currencyCode: nextCurrency,
+          bookingId,
         });
 
         applyPricingQuote(data);
       } catch (error) {
-        setPricingError(
-          error instanceof Error
-            ? error.message
-            : t("failedUpdatePrice"),
-        );
+        handlePricingError(error);
       } finally {
         setIsRecalculating(false);
       }
@@ -454,6 +545,8 @@ export default function SeatsPage() {
     [
       applyPricingQuote,
       assignedSeats,
+      bookingId,
+      handlePricingError,
       isRecalculating,
       offerId,
       paymentProvider,
@@ -461,7 +554,6 @@ export default function SeatsPage() {
       searchId,
       seatMaps,
       setPaymentProvider,
-      t,
       travelers,
     ],
   );
@@ -521,6 +613,7 @@ export default function SeatsPage() {
       const finalQuote = await fetchFlightPricing(searchId, offerId, {
         seats,
         currencyCode: checkoutCurrency,
+        bookingId,
       });
       const confirmedPricing = applyPricingQuote(finalQuote);
 
@@ -560,6 +653,9 @@ export default function SeatsPage() {
     );
   const canProceedToPayment =
     hasSearchContext &&
+    !bookingExpired &&
+    !searchSessionExpired &&
+    !seatMapLoadError &&
     !isSeatMapsLoading &&
     !isHydratingPricing &&
     !quoteExpired &&
@@ -580,6 +676,8 @@ export default function SeatsPage() {
     return result;
   }, [assignedSeats, seatMaps, travelers]);
 
+  const resolvedInactiveReason = inactiveReason ?? (bookingExpired ? "expired" : null);
+
   if (isRouting || isHydratingTravelers) {
     return (
       <BookingLayout
@@ -596,7 +694,7 @@ export default function SeatsPage() {
     );
   }
 
-  if (inactiveReason) {
+  if (resolvedInactiveReason) {
     return (
       <BookingLayout
         sidebar={
@@ -605,7 +703,11 @@ export default function SeatsPage() {
           </div>
         }
       >
-        <BookingInactiveView reason={inactiveReason} title={t("seatSelection")} />
+        <BookingInactiveView
+          reason={resolvedInactiveReason}
+          title={t("seatSelection")}
+          bookingId={bookingId}
+        />
       </BookingLayout>
     );
   }
@@ -686,6 +788,9 @@ export default function SeatsPage() {
           <PriceSidebar
             variant="checkout"
             onContinue={handleBooking}
+            onRefreshPrice={handleRefreshPrice}
+            onBackToSearch={goBackToSearch}
+            showBackToSearch={searchSessionExpired}
             disabled={!canProceedToPayment || isBooking}
             isLoading={isBooking}
             isPricingLoading={isRecalculating}
@@ -714,6 +819,11 @@ export default function SeatsPage() {
         <div className="bg-white rounded-lg shadow-md border p-6">
           <h1 className="text-3xl font-bold mb-2">{t("seatSelection")}</h1>
 
+          <BookingExpiryBanner
+            countdown={bookingCountdown}
+            urgent={bookingExpiryUrgent}
+          />
+
           <p className="text-gray-600">
             {t("selectSeatsIntro", { count: seatableTravelerIndexes.length })}
             {lapInfantCount > 0 ? t("lapInfantSuffix", { count: lapInfantCount }) : ""}
@@ -736,7 +846,25 @@ export default function SeatsPage() {
             <p className="text-sm text-gray-500 mt-4">{t("loadingSeatMap")}</p>
           )}
 
-          {!isSeatMapsLoading && seatMapUnavailable && (
+          {!isSeatMapsLoading && searchSessionExpired && (
+            <div
+              className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              role="alert"
+            >
+              {t("searchSessionExpired")}
+            </div>
+          )}
+
+          {!isSeatMapsLoading && seatMapLoadError && (
+            <div
+              className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+              role="alert"
+            >
+              {seatMapLoadError}
+            </div>
+          )}
+
+          {!isSeatMapsLoading && seatMapUnavailable && !searchSessionExpired && !seatMapLoadError && (
             <p className="text-sm text-gray-600 mt-4">{t("seatMapUnavailable")}</p>
           )}
 

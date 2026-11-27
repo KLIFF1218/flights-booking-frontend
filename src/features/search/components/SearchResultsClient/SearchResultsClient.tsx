@@ -18,7 +18,11 @@ import { FlightCardSkeleton } from "@/features/search/components/Skeleton/Flight
 import { FilterSidebar } from "@/features/search/components/Filters/FiltersSidebar";
 
 import type { PricedFlight } from "@/shared/types/flight";
-import { parseFlightSearchParams, parseSortFromSearchParams, getRouteSearchKey } from "@/features/search/utils/search-params";
+import {
+  parseFlightSearchParams,
+  parseSortFromSearchParams,
+  getRouteSearchKey,
+} from "@/features/search/utils/search-params";
 import {
   appendFiltersToSearchParams,
   EMPTY_FILTERS,
@@ -32,6 +36,7 @@ import {
   type FlightSortOption,
   isSearchSessionExpiredError,
 } from "@/features/search/api/search.api";
+import { persistLastSearchQuery } from "@/features/search/utils/search-navigation";
 
 import { ArrowUp } from "lucide-react";
 
@@ -60,6 +65,7 @@ export function SearchResultsClient() {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const pricingRequestIdRef = useRef(0);
 
   const searchQueryKey = searchParams.toString();
   const routeSearchKey = useMemo(
@@ -81,7 +87,20 @@ export function SearchResultsClient() {
   const hasValidSearchParams = parsedSearch !== null;
   const searchCurrency = useSearchCurrency();
 
-  const { sessionQuery, resultsQuery, searchId: sessionSearchId, refreshSearch } = useFlightSearch({
+  useEffect(() => {
+    if (!hasValidSearchParams || !searchQueryKey) {
+      return;
+    }
+
+    persistLastSearchQuery(searchQueryKey);
+  }, [hasValidSearchParams, searchQueryKey]);
+
+  const {
+    sessionQuery,
+    resultsQuery,
+    searchId: sessionSearchId,
+    refreshSearch,
+  } = useFlightSearch({
     parsedSearch,
     routeSearchKey,
     sort: sortBy,
@@ -223,6 +242,8 @@ export function SearchResultsClient() {
     searchId: string;
     id: string;
   }) {
+    const requestId = ++pricingRequestIdRef.current;
+
     if (isSearchExpired()) {
       setPriceModalOpen(true);
       return;
@@ -233,21 +254,32 @@ export function SearchResultsClient() {
       setIsSheetOpen(true);
       setPricingState({ status: "loading", flight: null });
 
-      const pricedFlightResponse = await fetchFlightPricing(selectedSearchId, id, {
-        currencyCode: searchCurrency,
-      });
+      const pricedFlightResponse = await fetchFlightPricing(
+        selectedSearchId,
+        id,
+        {
+          currencyCode: searchCurrency,
+        },
+      );
+      if (requestId !== pricingRequestIdRef.current) {
+        return;
+      }
+
       const pricedFlight = mapPricingResponseToFlight(
         pricedFlightResponse,
         searchCurrency,
       );
 
       setFlight(pricedFlight);
-      setPricing(mapPricingResponseToState(pricedFlightResponse, searchCurrency));
+      setPricing(
+        mapPricingResponseToState(pricedFlightResponse, searchCurrency),
+      );
       setPricingState({ status: "success", flight: pricedFlight });
 
       if (pricedFlightResponse.scheduleChanged) {
         const delayLabel =
-          pricedFlightResponse.delayMinutes && pricedFlightResponse.delayMinutes > 0
+          pricedFlightResponse.delayMinutes &&
+          pricedFlightResponse.delayMinutes > 0
             ? ` (+${pricedFlightResponse.delayMinutes} min)`
             : "";
         window.alert(
@@ -255,6 +287,9 @@ export function SearchResultsClient() {
         );
       }
     } catch (error: unknown) {
+      if (requestId !== pricingRequestIdRef.current) {
+        return;
+      }
       const message =
         error instanceof Error ? error.message : String(error ?? "");
 
@@ -397,25 +432,31 @@ export function SearchResultsClient() {
                   </div>
                 )}
 
-                {hasValidSearchParams && !isLoading && !isFetching && hasResults && (
-                  <>
-                    <FlightCard
-                      flights={flights}
-                      searchId={searchId}
-                      onSelect={handleSelectFlight}
-                      disabled={pricingState.status === "loading"}
-                      sortBy={sortBy}
-                    />
-                    <div ref={loadMoreRef} className="mt-8 flex justify-center">
-                      {resultsQuery.isFetchingNextPage && (
-                        <div className="space-y-4 w-full">
-                          <FlightCardSkeleton />
-                          <FlightCardSkeleton />
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
+                {hasValidSearchParams &&
+                  !isLoading &&
+                  !isFetching &&
+                  hasResults && (
+                    <>
+                      <FlightCard
+                        flights={flights}
+                        searchId={searchId}
+                        onSelect={handleSelectFlight}
+                        disabled={pricingState.status === "loading"}
+                        sortBy={sortBy}
+                      />
+                      <div
+                        ref={loadMoreRef}
+                        className="mt-8 flex justify-center"
+                      >
+                        {resultsQuery.isFetchingNextPage && (
+                          <div className="space-y-4 w-full">
+                            <FlightCardSkeleton />
+                            <FlightCardSkeleton />
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
 
                 {hasValidSearchParams &&
                   !isLoading &&

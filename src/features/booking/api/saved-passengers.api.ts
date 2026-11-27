@@ -90,7 +90,9 @@ export async function syncSavedPassengersSafely(
 }
 
 export async function deleteSavedPassenger(id: string): Promise<void> {
-  await apiFetch(`/users/me/passengers/${id}`, { method: "DELETE" });
+  await apiFetch(`/users/me/passengers/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  });
 }
 
 export function canSyncTravelerToSavedProfile(traveler: TravelerForm): boolean {
@@ -102,8 +104,8 @@ export function canSyncTravelerToSavedProfile(traveler: TravelerForm): boolean {
 
   return Boolean(
     traveler.passportNumber.trim() &&
-      traveler.passportIssuanceDate.trim() &&
-      traveler.passportExpiry.trim(),
+    traveler.passportIssuanceDate.trim() &&
+    traveler.passportExpiry.trim(),
   );
 }
 

@@ -11,7 +11,7 @@ export function BookingAuthGuard({ children }: Props) {
   const { isChecking, isReady } = useRequireAuth();
   const t = useTranslations("booking");
 
-  if (isChecking) {
+  if (isChecking || !isReady) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="text-center">
@@ -20,10 +20,6 @@ export function BookingAuthGuard({ children }: Props) {
         </div>
       </div>
     );
-  }
-
-  if (!isReady) {
-    return null;
   }
 
   return <>{children}</>;

@@ -2,7 +2,9 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePathname } from "@/i18n/navigation";
 import { useAuthStore } from "@/lib/auth-store";
+import { isRealtimeNotificationPath } from "@/shared/config/booking-routes";
 import { connectNotificationStream } from "@/features/account/lib/notification-stream";
 import { useNotificationStreamStore } from "@/features/account/lib/notification-stream-store";
 import {
@@ -12,13 +14,21 @@ import {
 } from "@/features/account/hooks/useUserNotifications";
 
 export function NotificationStreamListener() {
+  const pathname = usePathname();
   const authChecked = useAuthStore((state) => state.authChecked);
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
-  const setConnected = useNotificationStreamStore((state) => state.setConnected);
+  const setConnected = useNotificationStreamStore(
+    (state) => state.setConnected,
+  );
   const queryClient = useQueryClient();
+  const streamEnabled = isRealtimeNotificationPath(pathname);
 
   useEffect(() => {
-    if (!authChecked || !isAuthorized) {
+    if (!authChecked) {
+      return;
+    }
+
+    if (!isAuthorized || !streamEnabled) {
       setConnected(false);
       return;
     }
@@ -31,8 +41,12 @@ export function NotificationStreamListener() {
           return;
         }
 
-        queryClient.invalidateQueries({ queryKey: USER_NOTIFICATIONS_QUERY_KEY });
-        queryClient.invalidateQueries({ queryKey: USER_NOTIFICATIONS_UNREAD_COUNT_KEY });
+        queryClient.invalidateQueries({
+          queryKey: USER_NOTIFICATIONS_QUERY_KEY,
+        });
+        queryClient.invalidateQueries({
+          queryKey: USER_NOTIFICATIONS_UNREAD_COUNT_KEY,
+        });
       },
     });
 
@@ -40,7 +54,7 @@ export function NotificationStreamListener() {
       disconnect();
       setConnected(false);
     };
-  }, [authChecked, isAuthorized, queryClient, setConnected]);
+  }, [authChecked, isAuthorized, queryClient, setConnected, streamEnabled]);
 
   return null;
 }

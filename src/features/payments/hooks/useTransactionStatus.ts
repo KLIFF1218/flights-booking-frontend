@@ -15,7 +15,8 @@ export function useTransactionStatus(
   const isAuthorized = useAuthStore((state) => state.isAuthorized);
 
   const enabled =
-    options.enabled ?? (authChecked && isAuthorized && Boolean(transactionId));
+    Boolean(transactionId) &&
+    (options.enabled ?? (authChecked && isAuthorized));
 
   const query = useQuery({
     queryKey: [...TRANSACTION_STATUS_QUERY_KEY, transactionId],

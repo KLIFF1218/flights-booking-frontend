@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Header } from "@/shared/ui/header/Header";
 import { isAdminPath } from "@/shared/config/admin-routes";
+import { isBookingCheckoutPath } from "@/shared/config/booking-routes";
 import { usePathname } from "@/i18n/navigation";
 import { usePathMatches } from "@/hooks/useIsMounted";
 
@@ -12,7 +13,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const needsHeaderOffset = usePathMatches("/my", pathname);
 
-  if (isAdminPath(pathname)) {
+  if (isAdminPath(pathname) || isBookingCheckoutPath(pathname)) {
     return children;
   }
 
